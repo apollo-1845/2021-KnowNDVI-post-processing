@@ -1,5 +1,5 @@
 # Results to read in
-results/
+out/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
