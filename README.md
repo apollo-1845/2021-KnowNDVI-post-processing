@@ -5,6 +5,7 @@
 Please add any PIP-installed libraries here with their use:
 
 |Dependency | Use|
+|---|---|
 |fsspec | Dataset Authentication|
 |aiohttp | Dataset Authentication|
 |requests | Accessing datasets|
