@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 from project_types import Data
 
-from input_data.color_map import fastiecm
+from main.color_map import fastiecm
 
 from settings import IS_PROD, USE_PNG, OUT_DIR
 
