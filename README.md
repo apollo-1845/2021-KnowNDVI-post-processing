@@ -4,8 +4,10 @@
 ## Dependencies
 Please add any PIP-installed libraries here with their use:
 
-|Dependency | Use|
-|---|---|
-|fsspec | Dataset Authentication|
-|aiohttp | Dataset Authentication|
-|requests | Accessing datasets|
+| Dependency | Use                         |
+|------------|-----------------------------|
+| fsspec     | Dataset Authentication      |
+| aiohttp    | Dataset Authentication      |
+| requests   | Accessing datasets          |
+| numpy      | Image processing & analysis |
+| opencv     | Image processing            |
