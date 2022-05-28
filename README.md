@@ -11,3 +11,12 @@ Please add any PIP-installed libraries here with their use:
 | requests   | Accessing datasets          |
 | numpy      | Image processing & analysis |
 | opencv     | Image processing            |
+
+## Notes
+* Number of images to process:
+  * Takes around 2.5 seconds to open (but not process) 100 photo pairs
+  * We have 4146 photos
+  * Therefore, opening all the images would take around 2 minutes
+* Land/sea
+  * Use location?
+  * Then filter by colour?

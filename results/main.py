@@ -1,4 +1,6 @@
 # Read out from ISS saved data
+import time
+
 import numpy as np
 
 from results.timestamp_data import TimeStampData
@@ -48,11 +50,22 @@ class ResultReader:
         print("Close")
         self.reader.close()
 
+
 in_types = [TimeStampData, CameraData]
-reader = ResultReader("../out/out.blob", in_types)
+reader = ResultReader("out/out.blob", in_types)
+
+start = time.time()
+i = 0
 for timestamp, photo in reader.read_groups():
-    print("@", timestamp)
-    ndvi = photo.get_ndvi()
-    ndvi.display()
+    if(i % 600 == 0):
+        print("@", timestamp)
+        photo.display()
+        ndvi = photo.get_ndvi()
+        ndvi.display()
+    i += 1
+
+end = time.time()
+
+print("Took ", end-start)
 
 reader.close()
