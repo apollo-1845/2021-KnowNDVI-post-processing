@@ -5,6 +5,17 @@ from project_types import Data
 
 import numpy as np
 
+# ISS location
+import datetime
+
+from skyfield.api import EarthSatellite, load
+from skyfield.timelib import utc
+from skyfield.toposlib import wgs84
+from settings import ISS_TLE_1, ISS_TLE_2
+
+timescale = load.timescale()
+iss = EarthSatellite(ISS_TLE_1, ISS_TLE_2, 'ISS', timescale)
+
 
 class TimeStampData(Data):
     """A Data subclass that represents a timestamp."""
@@ -34,3 +45,15 @@ class TimeStampData(Data):
 
     def __repr__(self):
         return f"Timestamp data: {self.data}"
+
+    """Getting location"""
+
+    def to_location(self):
+        """Convert UNIX timestamp to ISS (lat, lon) location using skyfield"""
+        date = datetime.datetime.fromtimestamp(self.data[0], tz=utc)
+        # print(date)
+        ts = timescale.from_datetime(date)
+        geocentric = iss.at(ts)
+        lat, lon = wgs84.latlon_of(geocentric)
+        # print(lat.degrees, lon.degrees)
+        return lat.degrees, lon.degrees  # Store in floating-point degrees

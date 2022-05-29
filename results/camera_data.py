@@ -84,7 +84,7 @@ class CameraData(Data):
         """Deserialise the image data as a png."""
         # Load from bytes
         load_id = int.from_bytes(b, byteorder='big')
-        print("Deserialised image file id", load_id)
+        # print("Deserialised image file id", load_id)
         # As PNG, get from ID
         nir = cv2.imread(os.path.join(".", "out", str(load_id) + "_nir.png"), \
                          cv2.IMREAD_ANYCOLOR)
@@ -134,9 +134,20 @@ class CameraData(Data):
         ndvi[total < 100] = np.nan  # Unreliable data if dark as either camera cover or too imprecise
 
         data = CameraData.from_processed_np_array(ndvi)
-        data.contrast()
+        # data.contrast()
 
         return data
+
+    def get_unusable_area(self):
+        nan_counts = np.count_nonzero(np.isnan(self.image))
+        return nan_counts
+
+    def get_mean_and_weight(self):
+        # mean = mean pixel value, weight = how many valid pixels
+        mean = np.nanmean(self.image)
+        weight = len(self.image) - np.count_nonzero(np.isnan(self.image))  # Pixels that aren't NaN
+
+        return mean, weight
 
     def contrast(self):
         img = self.image
