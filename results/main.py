@@ -83,7 +83,8 @@ for timestamp, photo in reader.read_groups():
             least_unusable = unusable
             best_image = i
 
-        # ndvi.display()
+        ndvi.contrast()
+        ndvi.display()
     i += 1
     # if(i > 1000): break
 
