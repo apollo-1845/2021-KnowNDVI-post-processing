@@ -1,5 +1,7 @@
 # Results to read in
-out/
+/data/images/vis/*
+/data/images/nir/*
+!**/*.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
