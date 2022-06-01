@@ -28,3 +28,9 @@ Please add any PIP-installed libraries here with their use:
 * Land/sea
   * Use location?
   * Then filter by colour?
+# Installation
+1. Clone the repository: `git clone https://github.com/apollo-1845/Team-2-post-processing.git`
+2. Run `git submodule update --init` to pull the class definitions
+3. Download the data files: https://we.tl/t-SQBfFJt4SP and put the vis and nir pictures into the vis and nir directories under `data/images`
+
+TODO: finish this
