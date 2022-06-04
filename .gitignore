@@ -1,6 +1,6 @@
 # Results to read in
-/data/images/vis/*
-/data/images/nir/*
+**/images/vis/*
+**/images/nir/*
 !**/*.md
 
 # Byte-compiled / optimized / DLL files
