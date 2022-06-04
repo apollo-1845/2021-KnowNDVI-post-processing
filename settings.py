@@ -10,8 +10,8 @@ PREFERRED_RES_NP = (480, 640)  # Reverse - for creating NumPy arrays
 USE_PNG = True
 
 # Output
-OUT_DIR = os.path.join(".", "out")
-OUT_FILE = os.path.join(OUT_DIR, "out.blob")
+OUT_DIR = os.path.join(".", "data")
+OUT_FILE = os.path.join(OUT_DIR, "other", "out.blob")
 
 # ISS Location - https://rhodesmill.org/skyfield/earth-satellites.html#loading-a-tle-set-from-strings and https://web.archive.org/web/20220505085514/http://www.celestrak.com/NORAD/elements/stations.txt
 # As of May 05 2022 (to ensure accuracy)

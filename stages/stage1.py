@@ -1,5 +1,8 @@
 # Read out from ISS saved data
 from results.data_point import DataPoint
+from results.camera_data import CameraData
+from results.timestamp_data import TimeStampData
+from settings import OUT_FILE
 import time
 
 import numpy as np
@@ -19,7 +22,6 @@ def parse_blob(fileName):
         return out
 
     data_types_num = 2
-
     # a partially parsed value indicates that something went wrong when parsing
     data_point_completely_parsed = True
 
@@ -37,7 +39,6 @@ def parse_blob(fileName):
                 parsed_sensor_id = int(
                     np.frombuffer(sensor_id_byte, "uint8")
                 )  # Read 1 byte
-
                 assert parsed_sensor_id == data_type_id
 
                 # Length of reading in bytes

@@ -76,8 +76,8 @@ class CameraData(Data):
         image_id = save_id
 
         nir, vis = cv2.split(self.image)
-        cv2.imwrite(os.path.join(OUT_DIR, str(image_id) + "_nir.png"), nir)
-        cv2.imwrite(os.path.join(OUT_DIR, str(image_id) + "_vis.png"), vis)
+        cv2.imwrite(os.path.join(OUT_DIR, "nir", str(image_id) + "_nir.png"), nir)
+        cv2.imwrite(os.path.join(OUT_DIR, "vis", str(image_id) + "_vis.png"), vis)
 
         # Return as bytes; dynamic size based on size of image ID
         result = int.to_bytes(
@@ -96,12 +96,10 @@ class CameraData(Data):
         # print("Deserialised image file id", load_id)
         # As PNG, get from ID
         nir = cv2.imread(
-            os.path.join(".", "data", "images", "nir", str(load_id) + "_nir.png"),
-            cv2.IMREAD_ANYCOLOR,
+            os.path.join(OUT_DIR, "nir", str(load_id) + "_nir.png"), cv2.IMREAD_ANYCOLOR
         )
         vis = cv2.imread(
-            os.path.join(".", "data", "images", "vis", str(load_id) + "_vis.png"),
-            cv2.IMREAD_ANYCOLOR,
+            os.path.join(OUT_DIR, "vis", str(load_id) + "_vis.png"), cv2.IMREAD_ANYCOLOR
         )
 
         img = np.dstack((nir, vis))
@@ -109,7 +107,7 @@ class CameraData(Data):
         return CameraData.from_processed_np_array(img)
 
     def __repr__(self):
-        return f"Camera data (shape={self.image.shape})"
+        return f"📸(shape={self.image.shape})"
 
     def display(self):
         """Create a preview window of the contained image"""
@@ -138,22 +136,35 @@ class CameraData(Data):
         self.contrast()
         # Split into channels
         nir, vis = cv2.split(self.image)
+
         total = nir.astype(float) + vis.astype(float)
         total[total == 0] = 0.01  # Don't divide by zero!
 
         # More near-infrared and less visible reflected means plant
         ndvi = (nir.astype(float) - vis) / total
 
-        # Masking - total is the total of red and blue channels
-        ndvi[total > 450] = np.nan  # Clouds have more both red and blue
-        ndvi[
-            total < 100
-        ] = np.nan  # Unreliable data if dark as either camera cover or too imprecise
+        threshold = 0.18
+        # ndvi[ndvi < threshold] = np.nan
 
         data = CameraData.from_processed_np_array(ndvi)
         # data.contrast()
 
+        print(data)
+
         return data
+
+    def mask_lighter_total(self, threshold: int):
+        """Mask total NIR + VIS larger than threshold (up to 510)"""
+        # Masking - total is the total of red and blue channels
+        nir, vis = cv2.split(self.image)
+        nir = nir.astype("float")
+        vis = vis.astype("float")
+        total = nir + vis
+
+        mask = total > threshold
+        nir[mask] = np.nan
+        vis[mask] = np.nan
+        self.image = cv2.merge([nir, vis])
 
     def get_unusable_area(self):
         nan_counts = np.count_nonzero(np.isnan(self.image))
@@ -182,6 +193,7 @@ class CameraData(Data):
         result *= (out_max - out_min) / (
             in_max - in_min
         )  # Divide away input range and then multiply in output range
-        result += in_min  # Now min is out_min m
+        result += in_min  # N
+        # now min is out_min m
 
         self.image = result
