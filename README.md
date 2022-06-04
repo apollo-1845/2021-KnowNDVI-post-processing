@@ -28,4 +28,12 @@
 | opencv     | Image processing            |
 | skyfield   | ISS Location                |
 
+> One way to do this is to save the `out` folder's contents in `data/out` then run the following shell script at the root directory of the project:
+> ```bash
+  > cd ./data
+  > cp ./out/*_nir.png ./images/nir
+  > cp ./out/*_vis.png ./images/vis
+  > rm -r ./out
+  > ```
+
 TODO: finish this

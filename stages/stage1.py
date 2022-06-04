@@ -18,7 +18,7 @@ def parse_blob(fileName):
         out = file.read(num)
         # unexpected EOF
         if len(out) != num:
-            raise EOFError("Unexpected EOF - looks like there are no datapoints left.")
+            raise EOFError("Unexpected EOF - looks like there are no data_points left.")
         return out
 
     data_types_num = 2
@@ -62,10 +62,11 @@ def parse_blob(fileName):
 
 
 def run():
-    data_points_generator = parse_blob("./data/other/out.blob")
+    """Input files and parse into data points"""
+    return parse_blob(OUT_FILE)
 
-    for point in data_points_generator:
-        print(point.get_coordinates())
+    # for point in data_points_generator:
+    #     print(point.get_coordinates())
 
 
 # start = time.time()

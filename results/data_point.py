@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from datasets.reader import ASCReader
 from results.camera_data import CameraData
 from results.timestamp_data import TimeStampData
 
