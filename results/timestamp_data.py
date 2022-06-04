@@ -44,7 +44,7 @@ class TimeStampData(Data):
         return TimeStampData(np.frombuffer(b, dtype=np.uint64))
 
     def __repr__(self):
-        return f"Timestamp data: {self.data}"
+        return f"⌚{datetime.datetime.fromtimestamp(self.data[0])}"
 
     """Getting location"""
 

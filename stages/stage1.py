@@ -2,6 +2,7 @@
 from project_types import DataPoint
 from results.camera_data import CameraData
 from results.timestamp_data import TimeStampData
+from settings import OUT_FILE
 import time
 
 import numpy as np
@@ -63,7 +64,11 @@ def parse_blob(fileName):
     # a partially parsed value indicates that something went wrong when parsing
     data_point_completely_parsed = True
 
+    # Find first sensor ID
+    sensor_id_byte = read_check_EOF(1)
+
     while True:
+        # Get byte for sensor number so can check for EOF
         try:
             data_point_params = []
             for data_type_id in range(len(data_types)):
@@ -86,10 +91,10 @@ def parse_blob(fileName):
                 encoded_data = read_check_EOF(encoded_data_len)  # Read len bytes
                 data_point_params.append(data_type.deserialise(encoded_data))
 
+                data_point_completely_parsed = True
+
                 # Get byte for sensor number so can check for EOF
                 sensor_id_byte = read_check_EOF(1)
-
-            data_point_completely_parsed = True
 
             yield DataPoint(*data_point_params)
         except EOFError as e:
@@ -101,9 +106,9 @@ def parse_blob(fileName):
 
 
 def run():
-    data_points = parse_blob("../data/other/out.blob")
+    data_points = parse_blob(OUT_FILE)
 
-    print(data_points)
+    print(list(data_points))
 
 
 # landtype = ASCReader(

@@ -47,3 +47,6 @@ class DataPoint:
     def __init__(self, timestamp, image):
         self.timestamp = timestamp
         self.image = image
+
+    def __repr__(self):
+        return f"@[{self.timestamp}]: [{self.image}]"
