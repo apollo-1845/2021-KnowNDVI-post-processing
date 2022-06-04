@@ -1,4 +1,5 @@
 # Read out from ISS saved data
+
 from project_types import DataPoint
 from results.camera_data import CameraData
 from results.timestamp_data import TimeStampData
@@ -56,7 +57,7 @@ def parse_blob(fileName):
         out = file.read(num)
         # unexpected EOF
         if len(out) != num:
-            raise EOFError("Unexpected EOF - looks like there are no datapoints left.")
+            raise EOFError("Unexpected EOF - looks like there are no data_points left.")
         return out
 
     data_types = [TimeStampData, CameraData]
@@ -106,9 +107,10 @@ def parse_blob(fileName):
 
 
 def run():
+    """Input files and parse into data points"""
     data_points = parse_blob(OUT_FILE)
 
-    print(list(data_points))
+    return data_points
 
 
 # landtype = ASCReader(

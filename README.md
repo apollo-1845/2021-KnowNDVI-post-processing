@@ -32,4 +32,12 @@ Please add any PIP-installed libraries here with their use:
 1. Clone the repository: `git clone https://github.com/apollo-1845/Team-2-post-processing.git`
 2. Download the data files: https://we.tl/t-SQBfFJt4SP and put the vis and nir pictures into the vis and nir directories under `data/images`
 
+> One way to do this is to save the `out` folder's contents in `data/out` then run the following shell script at the root directory of the project:
+> ```bash
+  > cd ./data
+  > cp ./out/*_nir.png ./images/nir
+  > cp ./out/*_vis.png ./images/vis
+  > rm -r ./out
+  > ```
+
 TODO: finish this
