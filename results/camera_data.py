@@ -8,6 +8,7 @@ from results.color_map import fastiecm
 
 from settings import IS_PROD, USE_PNG, OUT_DIR
 
+
 class CameraData(Data):
     """A photo taken from a camera, with methods to convert to NDVI."""
 
@@ -29,6 +30,9 @@ class CameraData(Data):
         return self.image
 
     def serialise(self) -> bytes:
+        return self.serialise_as_png()
+
+    def serialise_as_npz(self) -> bytes:
         """
         Return bytes that can be stored to represent the value.
 
@@ -46,17 +50,21 @@ class CameraData(Data):
 
             save_id += 1  # Next image
 
-            return int.to_bytes(file_id, length=(save_id.bit_length()+7)//8,
-                                byteorder='big')
+            return int.to_bytes(
+                file_id, length=(save_id.bit_length() + 7) // 8, byteorder="big"
+            )
 
     @staticmethod
     def deserialise(b):
+        return CameraData.deserialise_as_png(b)
+
+    def deserialise_as_npz(b):
         """Reverse the serialisation process."""
-        if(USE_PNG):
+        if USE_PNG:
             result = CameraData.deserialise_as_png(b)
             return result
         else:
-            file_id = int.from_bytes(b, byteorder='big')
+            file_id = int.from_bytes(b, byteorder="big")
             out = CameraData()
             out.image = np.load(f"./out/cam_data_{file_id}.npz")["data"]
             return out
@@ -72,8 +80,9 @@ class CameraData(Data):
         cv2.imwrite(os.path.join(OUT_DIR, str(image_id) + "_vis.png"), vis)
 
         # Return as bytes; dynamic size based on size of image ID
-        result = int.to_bytes(image_id, length=(image_id.bit_length()+7)//8,
-                              byteorder='big')
+        result = int.to_bytes(
+            image_id, length=(image_id.bit_length() + 7) // 8, byteorder="big"
+        )
         print("Serialised image file id", image_id)
 
         save_id += 1  # Next image
@@ -83,13 +92,17 @@ class CameraData(Data):
     def deserialise_as_png(b):
         """Deserialise the image data as a png."""
         # Load from bytes
-        load_id = int.from_bytes(b, byteorder='big')
+        load_id = int.from_bytes(b, byteorder="big")
         # print("Deserialised image file id", load_id)
         # As PNG, get from ID
-        nir = cv2.imread(os.path.join(".", "out", str(load_id) + "_nir.png"), \
-                         cv2.IMREAD_ANYCOLOR)
-        vis = cv2.imread(os.path.join(".", "out", str(load_id) + "_vis.png"), \
-                         cv2.IMREAD_ANYCOLOR)
+        nir = cv2.imread(
+            os.path.join(".", "data", "images", "nir", str(load_id) + "_nir.png"),
+            cv2.IMREAD_ANYCOLOR,
+        )
+        vis = cv2.imread(
+            os.path.join(".", "data", "images", "vis", str(load_id) + "_vis.png"),
+            cv2.IMREAD_ANYCOLOR,
+        )
 
         img = np.dstack((nir, vis))
 
@@ -103,10 +116,11 @@ class CameraData(Data):
         img = self.image.copy()
 
         # Fill the missing colour channel with zeroes so that it can be displayed properly
-        if(len(img.shape) == 3 and img.shape[2] == 2):
-            img = np.lib.pad(img, ((0, 0), (0, 0), (0, 1)),
-                             'constant', constant_values=(0))
-        elif(len(img.shape) == 2):
+        if len(img.shape) == 3 and img.shape[2] == 2:
+            img = np.lib.pad(
+                img, ((0, 0), (0, 0), (0, 1)), "constant", constant_values=(0)
+            )
+        elif len(img.shape) == 2:
             # One channel - apply color map
             img = cv2.applyColorMap(img.astype(np.uint8), fastiecm)
 
@@ -118,6 +132,7 @@ class CameraData(Data):
         cv2.destroyAllWindows()
 
     """NDVI processing"""
+
     def get_ndvi(self):
         # Add contrast
         self.contrast()
@@ -131,7 +146,9 @@ class CameraData(Data):
 
         # Masking - total is the total of red and blue channels
         ndvi[total > 450] = np.nan  # Clouds have more both red and blue
-        ndvi[total < 100] = np.nan  # Unreliable data if dark as either camera cover or too imprecise
+        ndvi[
+            total < 100
+        ] = np.nan  # Unreliable data if dark as either camera cover or too imprecise
 
         data = CameraData.from_processed_np_array(ndvi)
         # data.contrast()
@@ -145,7 +162,9 @@ class CameraData(Data):
     def get_mean_and_weight(self):
         # mean = mean pixel value, weight = how many valid pixels
         mean = np.nanmean(self.image)
-        weight = len(self.image) - np.count_nonzero(np.isnan(self.image))  # Pixels that aren't NaN
+        weight = len(self.image) - np.count_nonzero(
+            np.isnan(self.image)
+        )  # Pixels that aren't NaN
 
         return mean, weight
 
@@ -160,8 +179,9 @@ class CameraData(Data):
         out_max = 255.0
         # Stretch to boundaries
         result = img - in_min  # Now min is 0
-        result *= ((out_max - out_min) / (
-                    in_max - in_min))  # Divide away input range and then multiply in output range
+        result *= (out_max - out_min) / (
+            in_max - in_min
+        )  # Divide away input range and then multiply in output range
         result += in_min  # Now min is out_min m
 
         self.image = result

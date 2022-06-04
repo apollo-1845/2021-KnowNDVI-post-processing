@@ -10,6 +10,7 @@ class Reader(ABC):
 
 
 # Read ASC datasets
+# More information here: https://support.geocue.com/ascii-raster-files-asc/
 class ASCReader:
     def __init__(self, file: str):
         """Read from an .ASC file"""
@@ -17,7 +18,7 @@ class ASCReader:
             """Load properties"""
             self.properties = {}
             line = reader.readline()
-            while (line[0] not in "0123456789"):
+            while line[0] not in "0123456789":
                 # Add property
                 prop = line.strip().split(" ")  # Remove newline, format
                 self.properties[prop[0]] = float(prop[1])
@@ -25,38 +26,22 @@ class ASCReader:
 
             """Load data"""
             self.data = []  # 2D array
-            while (line != ""):
-                row = list(
-                    map(
-                        float,  # Convert to floats
-                        line.split(" ")
-                    )
-                )
+            while line != "":
+                row = list(map(float, line.split(" ")))  # Convert to floats
                 self.data.append(row)
                 line = reader.readline()
 
-        """Can the width/height be wrapped?"""
-        self.continuous_width = self.properties["ncols"] == 360
-        self.continuous_height = self.properties["nrows"] == 180
-
+    # Note that there is a corner case where extreme negative latitudes or positive longitudes result in out-of-bounds error.
+    # That will not be fixed as it occurs only for exact points on the boundary that are extremely unlikely to occur during ordinary usage
     def get(self, lat_deg: float, lon_deg: float):
-        x_coords = int((lon_deg - self.properties["xllcorner"]) // self.properties["cellsize"])
-        y_coords = int((-lat_deg - self.properties["yllcorner"]) // self.properties[
-            "cellsize"])  # Reverse y axis as latitude points down
-        # if(x_coords < 0) or (y_coords < 0) or (x_coords > self.properties["ncols"]) or (y_coords > self.properties["nrows"]):
-        #     return None # Out of range
-        if (self.continuous_width):
-            x_coords %= 360
-        if (self.continuous_height):
-            y_coords %= 180
+        x_coords = int(
+            (lon_deg - self.properties["xllcorner"]) // self.properties["cellsize"]
+        )
+        y_coords = int(
+            (-lat_deg - self.properties["yllcorner"]) // self.properties["cellsize"]
+        )  # Reverse y axis as latitude points down
 
-        # print(lon_deg, x_coords, lat_deg, y_coords)
-
-        # print(x_coords, y_coords)
         data = self.data[y_coords][x_coords]
-        if (data == self.properties["NODATA_value"]):
+        if data == self.properties["NODATA_value"]:
             return None  # No data
         return data
-
-# landclass = ASCReader("./data/modis_landcover_class_qd.asc")
-# print(landclass.get(-52, -73))
