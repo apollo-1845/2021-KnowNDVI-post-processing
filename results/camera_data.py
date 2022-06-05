@@ -76,8 +76,8 @@ class CameraData(Data):
         image_id = save_id
 
         nir, vis = cv2.split(self.image)
-        cv2.imwrite(os.path.join(OUT_DIR, "nir", str(image_id) + "_nir.png"), nir)
-        cv2.imwrite(os.path.join(OUT_DIR, "vis", str(image_id) + "_vis.png"), vis)
+        cv2.imwrite(os.path.join(OUT_DIR, "images", "nir", str(image_id) + "_nir.png"), nir)
+        cv2.imwrite(os.path.join(OUT_DIR, "images", "vis", str(image_id) + "_vis.png"), vis)
 
         # Return as bytes; dynamic size based on size of image ID
         result = int.to_bytes(
@@ -95,12 +95,10 @@ class CameraData(Data):
         load_id = int.from_bytes(b, byteorder="big")
         # print("Deserialised image file id", load_id)
         # As PNG, get from ID
-        nir = cv2.imread(
-            os.path.join(OUT_DIR, "nir", str(load_id) + "_nir.png"), cv2.IMREAD_ANYCOLOR
-        )
-        vis = cv2.imread(
-            os.path.join(OUT_DIR, "vis", str(load_id) + "_vis.png"), cv2.IMREAD_ANYCOLOR
-        )
+        nir = cv2.imread(os.path.join(OUT_DIR, "images", "nir", str(load_id) + "_nir.png"), \
+                         cv2.IMREAD_ANYCOLOR)
+        vis = cv2.imread(os.path.join(OUT_DIR, "images", "vis", str(load_id) + "_vis.png"), \
+                         cv2.IMREAD_ANYCOLOR)
 
         img = np.dstack((nir, vis))
 
@@ -115,6 +113,21 @@ class CameraData(Data):
 
         # Fill the missing colour channel with zeroes so that it can be displayed properly
         if len(img.shape) == 3 and img.shape[2] == 2:
+
+            print(img.shape, type(img[0][0][0]))
+
+            # Handle NaN
+            nir, vis = cv2.split(img)
+            mask = nir == np.nan
+            nir[mask] = 0
+            vis[mask] = 0
+            # Make renderable
+            nir = nir.astype(np.uint8)
+            vis = vis.astype(np.uint8)
+            img = cv2.merge([nir, vis])
+
+            print(img.shape)
+
             img = np.lib.pad(
                 img, ((0, 0), (0, 0), (0, 1)), "constant", constant_values=(0)
             )
@@ -143,7 +156,7 @@ class CameraData(Data):
         # More near-infrared and less visible reflected means plant
         ndvi = (nir.astype(float) - vis) / total
 
-        threshold = 0.18
+        # threshold = 0.18
         # ndvi[ndvi < threshold] = np.nan
 
         data = CameraData.from_processed_np_array(ndvi)
@@ -157,11 +170,37 @@ class CameraData(Data):
         """Mask total NIR + VIS larger than threshold (up to 510)"""
         # Masking - total is the total of red and blue channels
         nir, vis = cv2.split(self.image)
-        nir = nir.astype("float")
+        nir = nir.astype("float")  # NaN is a float
         vis = vis.astype("float")
         total = nir + vis
 
         mask = total > threshold
+        nir[mask] = np.nan
+        vis[mask] = np.nan
+        self.image = cv2.merge([nir, vis])
+
+    def mask_darker_total(self, threshold: int):
+        """Mask total NIR + VIS smaller than threshold (up to 510)"""
+        # Masking - total is the total of red and blue channels
+        nir, vis = cv2.split(self.image)
+        nir = nir.astype("float")  # NaN is a float
+        vis = vis.astype("float")
+        total = nir + vis
+
+        mask = total < threshold
+        nir[mask] = np.nan
+        vis[mask] = np.nan
+        self.image = cv2.merge([nir, vis])
+
+    def mask_sea(self, threshold: float):
+        """Mask where NIR^2:VIS > threshold"""
+        # Masking - total is the total of red and blue channels
+        nir, vis = cv2.split(self.image)
+        nir = nir.astype("float")  # NaN is a float
+        vis = vis.astype("float")
+
+        vis[vis == 0] = 0.0001
+        mask = (nir ** 2 / vis) > threshold
         nir[mask] = np.nan
         vis[mask] = np.nan
         self.image = cv2.merge([nir, vis])
