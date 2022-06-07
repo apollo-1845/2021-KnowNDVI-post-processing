@@ -42,9 +42,9 @@ def filter(image: CameraData):
     # print("Thresholds:", thresholds)
 
     image.mask_lighter_total(310)  # Cloud threshold - TODO: Improve - more precise
-    image.mask_sea(225)  # Sea threshold - TODO: Improve - change algorithm / channel specific?
+    # image.mask_sea(225)  # Sea threshold - TODO: Improve - change algorithm / channel specific?
 
-    print(np.nanpercentile(image.image, 25, axis=0), np.nanpercentile(image.image, 75))
+    # print(np.nanpercentile(image.image, 25, axis=1), np.nanpercentile(image.image, 75, axis=1))
 
     # print(np.nan in image.image)
     # image.image[image.image == np.nan] = 0
