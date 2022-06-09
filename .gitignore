@@ -3,6 +3,10 @@
 **/images/nir/*
 !**/*.md
 
+# data that can be generated
+**/intermediates/**
+!**/intermediates/README.md
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -5,13 +5,20 @@ import cv2
 import numpy as np
 
 from results.camera_data import CameraData
+from misc.serialise_data_points import deserialise_from_file
 
+# An example name could be 'full_data'
+data_points = deserialise_from_file(f"./intermediates/{input('Input file name:')}.json")
+
+data_points = [point for point in data_points]
+print("Number of items: ", len(data_points))
 
 # def run(data_points):
 #     """Filter images from data point iterator, creating discarding masks with np.nan"""
 #     for point in data_points:
 #         point.image = filter(point.image) # Filter each separately
 #         yield point
+
 
 def filter(image: CameraData):
     """Filter clouds and sea"""
@@ -57,11 +64,12 @@ def filter(image: CameraData):
 
 
 # DEBUG
-for i in [670]:  # [1, 200, 670, 1880]:
-    image = CameraData.deserialise((i).to_bytes(4, "big"))  # Falkland Islands
-    image.display()
-    image = filter(image)
-    image.display()
-    image = image.get_ndvi()
-    image.contrast()
-    image.display()
+# for i in [670]:  # [1, 200, 670, 1880]:
+image = data_points[670].get_camera_data()  # Falkland Islands
+# image = CameraData.deserialise((i).to_bytes(4, "big"))  # Falkland Islands
+image.display()
+image = filter(image)
+image.display()
+image = image.get_ndvi()
+image.contrast()
+image.display()

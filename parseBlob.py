@@ -1,13 +1,12 @@
-# Read out from ISS saved data
+#!/usr/bin/env python
 from results.data_point import DataPoint
 from results.camera_data import CameraData
 from results.timestamp_data import TimeStampData
 from settings import OUT_FILE
-import time
-
 import numpy as np
+from misc.reader import ASCReader
 
-from datasets.reader import ASCReader
+from misc.serialise_data_points import serialise_to_file
 
 
 def parse_blob(fileName):
@@ -61,61 +60,6 @@ def parse_blob(fileName):
                 raise e
 
 
-def run():
-    """Input files and parse into data points"""
-    return parse_blob(OUT_FILE)
+data = parse_blob(OUT_FILE)
 
-    # for point in data_points_generator:
-    #     print(point.get_coordinates())
-
-
-# start = time.time()
-# i = 0
-# type_freqs = [0 for i in range(20)]
-
-# best_image = None
-# least_unusable = float("inf")
-
-# total_mean = np.zeros(20)
-# total_weight = np.zeros(20)
-
-# for timestamp, photo in reader.read_groups():
-#     # if(i % 100 == 0):
-#     timestamp = TimeStampData.deserialise(timestamp)
-#     loc = timestamp.to_location()
-#     type = int(landtype.get(loc[0], loc[1]))
-
-#     type_freqs[type] += 1
-
-#     if type != 0:
-#         print(i, "🌍", loc, type)
-#         photo = CameraData.deserialise(photo)
-#         # photo.display()
-#         ndvi = photo.get_ndvi()
-#         unusable = ndvi.get_unusable_area()
-
-#         mean, weight = ndvi.get_mean_and_weight()
-#         total_mean[type] += mean
-#         total_weight[type] += weight
-
-#         if unusable < least_unusable:
-#             least_unusable = unusable
-#             best_image = i
-
-#         ndvi.contrast()
-#         ndvi.display()
-#     i += 1
-#     # if(i > 1000): break
-
-# print(
-#     "Mean NDVI values: ", total_mean / total_weight
-# )  # TODO: Add inner-image filtering etc. to make this make sense. (It's currently saying that snow and ice has a lot of plant cover)
-
-# print(best_image)
-
-# end = time.time()
-
-# print("Took ", end - start)
-# print(type_freqs)
-
-# reader.close()
+serialise_to_file("./intermediates/full_data.json", data)

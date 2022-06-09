@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from datasets.reader import ASCReader
+from misc.reader import ASCReader
 from results.camera_data import CameraData
 from results.timestamp_data import TimeStampData
 
@@ -12,8 +12,10 @@ class DataPoint:
     """A class representing a collection of available data for a certain timestamp and position"""
 
     def __init__(self, timestamp_data_raw, camera_data_raw):
-        self._timestamp = TimeStampData.deserialise(timestamp_data_raw)
+        self._timestamp_data_raw = timestamp_data_raw
         self._camera_data_raw = camera_data_raw
+
+        self._timestamp = TimeStampData.deserialise(timestamp_data_raw)
         self._coordinates = self._timestamp.to_location()
         self._camera_data = None
 
@@ -30,3 +32,15 @@ class DataPoint:
 
     def get_landtype(self):
         landtype.get(loc[0], loc[1])
+
+    def serialise(self):
+        return {
+            "timestamp_data_raw": self._timestamp_data_raw.hex(),
+            "camera_data_raw": self._camera_data_raw.hex(),
+        }
+
+    def deserialise(serialised):
+        return DataPoint(
+            bytes.fromhex(serialised["timestamp_data_raw"]),
+            bytes.fromhex(serialised["camera_data_raw"]),
+        )

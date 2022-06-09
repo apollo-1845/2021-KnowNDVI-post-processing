@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from datasets.reader import ASCReader
+from misc.reader import ASCReader
 
 
 def run_test():
