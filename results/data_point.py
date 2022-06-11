@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from misc.reader import ASCReader
+from misc.dataset_reader import ASCReader
 from results.camera_data import CameraData
 from results.timestamp_data import TimeStampData
 
@@ -16,21 +16,23 @@ class DataPoint:
         self._camera_data_raw = camera_data_raw
 
         self._timestamp = TimeStampData.deserialise(timestamp_data_raw)
-        self._coordinates = self._timestamp.to_location()
+        self._coordinates = None
         self._camera_data = None
 
     def get_timestamp(self):
         return self._timestamp
 
     def get_camera_data(self):
-        if self._camera_data == None:
+        if self._camera_data is None:
             self._camera_data = CameraData.deserialise_as_png(self._camera_data_raw)
         return self._camera_data
 
     def get_coordinates(self):
+        if self._coordinates is None:
+            self._coordinates = self._timestamp.to_location()
         return self._coordinates
 
-    def get_landtype(self):
+    def get_landtype(self, loc):
         landtype.get(loc[0], loc[1])
 
     def serialise(self):

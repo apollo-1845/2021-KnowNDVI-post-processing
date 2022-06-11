@@ -4,7 +4,7 @@ from results.camera_data import CameraData
 from results.timestamp_data import TimeStampData
 from settings import OUT_FILE
 import numpy as np
-from misc.reader import ASCReader
+from misc.dataset_reader import ASCReader
 
 from misc.serialise_data_points import serialise_to_file
 

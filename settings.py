@@ -17,3 +17,8 @@ OUT_FILE = os.path.join(OUT_DIR, "other", "out.blob")
 # As of May 05 2022 (to ensure accuracy)
 ISS_TLE_1 = "1 25544U 98067A   22125.19210813  .00008001  00000+0  14831-3 0  9995"
 ISS_TLE_2 = "2 25544  51.6431 189.5223 0006686  66.4371  32.9954 15.49937273338517"
+
+# Classifier - Neural Network
+CLASSIFIER_CROP_SIZE = 5  # 5px x 5px inputted
+CLASSIFIER_TILE_SIZE = 2  # 2px x 2px squares on mask result - increase to speed up
+CLASSIFIER_CERTAINTY_THRESHOLD = 0.15  # If more certain than this, land

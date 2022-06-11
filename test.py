@@ -1,5 +1,5 @@
 #!/usr/bin/env python
 
-from tests.ASCReader import run_test
+from tests.classifier import run_test
 
 run_test()

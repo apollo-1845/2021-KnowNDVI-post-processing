@@ -13,6 +13,7 @@ class CameraData(Data):
     """A photo taken from a camera, with methods to convert to NDVI."""
 
     image = None
+    ndvi = None  # CameraData of NDVI channel - created on demand
 
     def is_invalid(self):
         """See if the data should not be recorded."""
@@ -142,29 +143,31 @@ class CameraData(Data):
         cv2.waitKey(0)  # wait for key press
         cv2.destroyAllWindows()
 
+    def get_raw_channels(self):
+        # Return the three channels nir, vis and ndvi for the classifier
+        nir, vis = cv2.split(self.image)
+        ndvi = self.get_ndvi().image
+
+        return (nir, vis, ndvi)
+
     """NDVI processing"""
 
     def get_ndvi(self):
-        # Add contrast
-        self.contrast()
-        # Split into channels
-        nir, vis = cv2.split(self.image)
+        if self.ndvi is None:
+            # Add contrast
+            self.contrast()
+            # Split into channels
+            nir, vis = cv2.split(self.image)
 
-        total = nir.astype(float) + vis.astype(float)
-        total[total == 0] = 0.01  # Don't divide by zero!
+            total = nir.astype(float) + vis.astype(float)
+            total[total == 0] = 0.01  # Don't divide by zero!
 
-        # More near-infrared and less visible reflected means plant
-        ndvi = (nir.astype(float) - vis) / total
+            # More near-infrared and less visible reflected means plant
+            ndvi = (nir.astype(float) - vis) / total
 
-        # threshold = 0.18
-        # ndvi[ndvi < threshold] = np.nan
+            self.ndvi = CameraData.from_processed_np_array(ndvi)
 
-        data = CameraData.from_processed_np_array(ndvi)
-        # data.contrast()
-
-        print(data)
-
-        return data
+        return self.ndvi
 
     def mask_lighter_total(self, threshold: int):
         """Mask total NIR + VIS larger than threshold (up to 510)"""
