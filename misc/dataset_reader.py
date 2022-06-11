@@ -11,7 +11,7 @@ class Reader(ABC):
 
 # Read ASC datasets
 # More information here: https://support.geocue.com/ascii-raster-files-asc/
-class ASCReader:
+class ASCReader(Reader):
     def __init__(self, file: str):
         """Read from an .ASC file"""
         with open(file, "r") as reader:
