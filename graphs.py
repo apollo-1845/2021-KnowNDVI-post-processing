@@ -5,15 +5,9 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-from misc.serialise_data_points import deserialise_from_file
+from misc.serialise_data_points import deserialise_from_prompt, deserialise_from_file
 
-# An example name could be 'full_data'
-# fileName = input('Input file name:')
-fileName = "full_data"
-data_points = deserialise_from_file(f"./intermediates/{fileName}.json")
-
-data_points = np.array([point for point in data_points])
-print("Number of items: ", len(data_points))
+data_points = deserialise_from_prompt()
 
 fig, ax = plt.subplots()  # Create a figure containing a single axes.
 
@@ -21,11 +15,25 @@ timestamps = [point.get_timestamp().get_raw() for point in data_points]
 latitudes = [point.get_coordinates()[0] for point in data_points]
 longitudes = [point.get_coordinates()[1] for point in data_points]
 
-ax.plot(timestamps, latitudes)
-# ax.plot(longitudes, latitudes)
-# ax.plot([i for i in range(len(data_points))], timestamps)
-# ax.plot([i for i in range(len(data_points))], latitudes)
-# Plot some data on the axes.
+
+def compare_filtered_and_unfiltered():
+    data_points_full = deserialise_from_file(f"./intermediates/full_data.json")
+    data_points_full = [point for point in data_points_full]
+
+    timestamps_full = [point.get_timestamp().get_raw() for point in data_points_full]
+    latitudes_full = [point.get_coordinates()[0] for point in data_points_full]
+    longitudes_full = [point.get_coordinates()[1] for point in data_points_full]
+
+    ax.scatter(longitudes_full, latitudes_full, c="blue", label="Full")
+    ax.scatter(longitudes, latitudes, c="orange", label="Filtered")
+    ax.set_xlabel("Longitude")
+    ax.set_ylabel("Latitude")
+    ax.set_title("Coordinates of taken pictures")
+
+
+compare_filtered_and_unfiltered()
+
+fig.legend(loc="upper left")
 
 fig.show()
 

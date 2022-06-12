@@ -5,13 +5,9 @@ import cv2
 import numpy as np
 
 from results.camera_data import CameraData
-from misc.serialise_data_points import deserialise_from_file
+from misc.serialise_data_points import deserialise_from_prompt
 
-# An example name could be 'full_data'
-data_points = deserialise_from_file(f"./intermediates/{input('Input file name:')}.json")
-
-data_points = [point for point in data_points]
-print("Number of items: ", len(data_points))
+data_points = deserialise_from_prompt()
 
 # def run(data_points):
 #     """Filter images from data point iterator, creating discarding masks with np.nan"""

@@ -4,7 +4,7 @@ from settings import OUT_FILE
 import numpy as np
 from misc.dataset_reader import ASCReader
 
-from misc.serialise_data_points import serialise_to_file
+from misc.serialise_data_points import serialise_from_prompt
 
 
 def parse_blob(fileName):
@@ -58,6 +58,6 @@ def parse_blob(fileName):
                 raise e
 
 
-data = parse_blob(OUT_FILE)
+data_points = parse_blob(OUT_FILE)
 
-serialise_to_file("./intermediates/full_data.json", data)
+serialise_from_prompt(data_points, "full_data")

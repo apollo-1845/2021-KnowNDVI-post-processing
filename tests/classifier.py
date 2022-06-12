@@ -2,8 +2,8 @@
 import os
 
 from classifier.classifier import Classifier
-from parseBlob import parse_blob
 from results.data_point import DataPoint
+from misc.serialise_data_points import deserialise_from_file
 
 from tensorflow.keras.models import (
     load_model,
@@ -12,7 +12,7 @@ from tensorflow.keras.models import (
 
 def get_datapoint(id: int) -> DataPoint:
     # Get image
-    data_points = parse_blob(os.path.join("data", "other", "out.blob"))
+    data_points = deserialise_from_file(f"./intermediates/full_data.json")
     i = 1
     for point in data_points:
         if i == id:

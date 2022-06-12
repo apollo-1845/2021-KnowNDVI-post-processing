@@ -6,6 +6,7 @@ from results.timestamp_data import TimeStampData
 landtype = ASCReader(
     "data/datasets/modis_landcover_class_qd.asc"
 )  # Legend: https://www.researchgate.net/profile/Annemarie_Schneider/publication/261707258/figure/download/fig3/AS:296638036889602@1447735427158/Early-result-from-MODIS-showing-the-global-map-of-land-cover-based-on-the-IGBP.png
+# A helpful site for debugging: https://www.findlatitudeandlongitude.com/
 
 
 class DataPoint:
@@ -32,8 +33,9 @@ class DataPoint:
             self._coordinates = self._timestamp.to_location()
         return self._coordinates
 
-    def get_landtype(self, loc):
-        landtype.get(loc[0], loc[1])
+    def get_landtype(self):
+        loc = self.get_coordinates()
+        return landtype.get(loc[0], loc[1])
 
     def serialise(self):
         return {
