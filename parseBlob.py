@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 from results.data_point import DataPoint
-from results.camera_data import CameraData
-from results.timestamp_data import TimeStampData
 from settings import OUT_FILE
 import numpy as np
 from misc.dataset_reader import ASCReader

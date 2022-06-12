@@ -14,7 +14,7 @@ from skyfield.toposlib import wgs84
 from settings import ISS_TLE_1, ISS_TLE_2
 
 timescale = load.timescale()
-iss = EarthSatellite(ISS_TLE_1, ISS_TLE_2, 'ISS', timescale)
+iss = EarthSatellite(ISS_TLE_1, ISS_TLE_2, "ISS", timescale)
 
 
 class TimeStampData(Data):
