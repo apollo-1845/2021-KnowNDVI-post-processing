@@ -7,9 +7,6 @@ data_points = deserialise_from_prompt()
 
 # NOTE This is a very crude way of doing this
 
-KM_PER_DEGREE_LATITUDE = 111
-KM_PER_DEGREE_LONGITUDE_EQUATOR = 111
-
 # Calculated using a picture of Falkland Islands
 KM_VIEW_DIAMETER = 404
 

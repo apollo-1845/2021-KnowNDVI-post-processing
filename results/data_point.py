@@ -13,12 +13,16 @@ class DataPoint:
     """A class representing a collection of available data for a certain timestamp and position"""
 
     def __init__(self, timestamp_data_raw, camera_data_raw):
+        self._id = int.from_bytes(camera_data_raw, byteorder="big")
         self._timestamp_data_raw = timestamp_data_raw
         self._camera_data_raw = camera_data_raw
 
         self._timestamp = TimeStampData.deserialise(timestamp_data_raw)
         self._coordinates = None
         self._camera_data = None
+
+    def get_id(self):
+        return self._id
 
     def get_timestamp(self):
         return self._timestamp

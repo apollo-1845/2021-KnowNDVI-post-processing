@@ -31,6 +31,9 @@ def compare_filtered_and_unfiltered():
     ax.set_title("Coordinates of taken pictures")
 
 
+for point in data_points:
+    print(point.get_id())
+
 compare_filtered_and_unfiltered()
 
 fig.legend(loc="upper left")
