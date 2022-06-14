@@ -22,11 +22,14 @@
 1. Clone the repository: `git clone https://github.com/apollo-1845/Team-2-post-processing.git`
 2. Download the data files: https://we.tl/t-SQBfFJt4SP and put the vis and nir pictures into the vis and nir directories under `data/images`
 3. Please add any PIP-installed libraries here with their use:
-| Dependency | Use                         |
-|------------|-----------------------------|
-| numpy      | Image processing & analysis |
-| opencv     | Image processing            |
-| skyfield   | ISS Location                |
+
+| Dependency | Use                                |
+|------------|------------------------------------|
+| numpy      | Image processing & analysis        |
+| opencv     | Image processing                   |
+| skyfield   | ISS Location                       |
+| tensorflow | Land classification neural network |
+| keras      | Land classification neural network|
 
 > One way to do this is to save the `out` folder's contents in `data/out` then run the following shell script at the root directory of the project:
 > ```bash
