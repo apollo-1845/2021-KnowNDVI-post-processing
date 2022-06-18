@@ -2,27 +2,13 @@
 import os
 import time
 
-from classifier.predict import Classifier
-from parseBlob import parse_blob
-from results.data_point import DataPoint
+from debug_funcs import get_datapoints
 
 import tensorflow as tf
 import numpy as np
 print("TF Version", tf.__version__)
 
 from tensorflow import keras # Trained and created separately; load the TF model into the classifier
-import cv2
-
-def get_datapoints(start_id: int, end_id: int) -> DataPoint:
-    # Get dp
-    data_points = parse_blob(os.path.join("data", "other", "out.blob"))
-    i = 1
-    for point in data_points:
-        if (i > end_id):
-            break
-        elif (i >= start_id):
-            yield point
-        i += 1
 
 # def get_dp_by_longitude(long:int) -> DataPoint:
 #     # Get dp

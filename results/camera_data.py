@@ -118,7 +118,7 @@ class CameraData(Data):
         # Fill the missing colour channel with zeroes so that it can be displayed properly
         if len(img.shape) == 3 and img.shape[2] == 2:
 
-            print(img.shape, type(img[0][0][0]))
+            # print(img.shape, type(img[0][0][0]))
 
             # Handle NaN
             nir, vis = cv2.split(img)
@@ -130,7 +130,7 @@ class CameraData(Data):
             vis = vis.astype(np.uint8)
             img = cv2.merge([nir, vis])
 
-            print(img.shape)
+            # print(img.shape)
 
             img = np.lib.pad(
                 img, ((0, 0), (0, 0), (0, 1)), "constant", constant_values=(0)
