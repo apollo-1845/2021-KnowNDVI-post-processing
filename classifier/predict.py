@@ -1,7 +1,11 @@
 # Using a TensorFlow Neural Network to predict where land is
+# OLD NN: https://gist.github.com/WebCoder49/24a08fb35383cd5f92d58cef93470773
+from copy import deepcopy
+
 import cv2
 import numpy as np
 
+from results.camera_data import cam_cover_mask
 from settings import CLASSIFIER_CERTAINTY_THRESHOLD as CERTAINTY_THRESHOLD
 from settings import CLASSIFIER_TILE_SIZE as TILE_SIZE
 
@@ -22,6 +26,9 @@ class Classifier:
 
         # Save NN
         self.model = model
+
+        self.height = (self.vis.shape[0] // TILE_SIZE) * TILE_SIZE  # Multiple of tile_size
+        self.width = (self.vis.shape[1] // TILE_SIZE) * TILE_SIZE  # Multiple of tile_size
 
     def get_crop(self, x: int, y: int):
         """Get the cropped portion of the image from nir, vis and ndvi"""
@@ -67,55 +74,44 @@ class Classifier:
                 ndvi_crop = np.hstack([ndvi_crop, empty_line])  # Horizontal, after
             # print("+x>", nir_crop.shape, vis_crop.shape, start_x, start_y)
 
-        return nir_crop, vis_crop, ndvi_crop
+        return nir_crop.astype(float), vis_crop.astype(float), ndvi_crop.astype(float)
 
     def predict_image(self):
         """Return a mask of which pixels are land from the nir, vis and ndvi channels. If this is slow, update `settings."""
         crops = []
 
-        height = (self.vis.shape[1] // TILE_SIZE) * TILE_SIZE  # Multiple of tile_size
-        width = (self.vis.shape[1] // TILE_SIZE) * TILE_SIZE  # Multiple of tile_size
+        where_useful = [] # Don't pass through NN - camera cover
 
-        for y in range(0, height, TILE_SIZE):
-            for x in range(0, width, TILE_SIZE):
-                crop = np.array(self.get_crop(x, y))
-                # cv2_imshow(crop[1])
-                # print(x, y, nir[y, x], vis[y, x])
-                # cv2_imshow(crop[1])
-                crops.append(crop)
+        for y in range(0, self.height, TILE_SIZE):
+            for x in range(0, self.width, TILE_SIZE):
+                is_useful = (self.vis[y, x] > 0) and (self.nir[y, x] > 0) # Not camera cover / night; can pass through NN
+                where_useful.append(is_useful)
+                if is_useful:
+                    # Not completely black
+                    crop = cv2.merge(self.get_crop(x, y)) # Merge channels returned
+                    # cv2_imshow(crop[1])
+                    # print(x, y, nir[y, x], vis[y, x])
+                    # cv2_imshow(crop[1])
+                    crops.append(crop)
 
         crops = np.array(crops)
         prediction = self.model.predict(crops)
-        prediction = np.reshape(prediction, (height // TILE_SIZE, width // TILE_SIZE))  # grid
-        prediction = cv2.resize(prediction, None, None, TILE_SIZE, TILE_SIZE, cv2.INTER_NEAREST)  # Nearest neighbour
 
-        return self.prediction_to_mask(prediction)
+        # Add cover - 0 certainty at camera cover
+        shaped_prediction = np.zeros(len(where_useful))
+        shaped_prediction[where_useful] = np.reshape(prediction, (-1)) # 1D
+
+        # Reshape into grid
+        shaped_prediction = np.reshape(shaped_prediction, (self.height // TILE_SIZE, self.width // TILE_SIZE))  # grid
+        shaped_prediction = cv2.resize(shaped_prediction, None, None, TILE_SIZE, TILE_SIZE, cv2.INTER_NEAREST)  # Nearest neighbour
+
+        return self.prediction_to_mask(shaped_prediction)
 
     def prediction_to_mask(self, prediction):
-        mask = prediction
+        """Change float prediction certainty matrix to a boolean land mask"""
 
-        # Double-check to remove large clouds with thresholds
-        total = (self.nir.astype("float") + self.vis.astype("float"))
-        mask[total > 310] = 0  # 310 # Remove clouds by colour
-        mask[total < 200] = 0  # 310 # Remove sea by colour
+        return prediction > CERTAINTY_THRESHOLD
 
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (32, 32))
-        mask = cv2.filter2D(mask, -1, kernel) / kernel.sum()  # Convolution to favour large land masses
-
-        # Remove noise
-        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (6, 6)))
-
-        # DEBUG - show mask on image
-        result = self.vis.copy()
-        result[mask < CERTAINTY_THRESHOLD] = result[mask < 0.15] // 3
-        # Display
-        title = "Classifier mask preview"
-        cv2.namedWindow(title)  # create window
-        cv2.imshow(title, result)  # display image
-        cv2.waitKey(0)  # wait for key press
-        cv2.destroyAllWindows()
-
-        return mask < CERTAINTY_THRESHOLD
 
     @staticmethod
     def create_empty_col(length):
@@ -126,3 +122,7 @@ class Classifier:
     def create_empty_row(length):
         """Padding for crops - Create a line of zeros each in a 1-item array of len length"""
         return np.array([np.array([0]) for x in range(length)])
+
+    def crop_to_tiles(self, img):
+        """Crop an image to make it the same shape as the mask."""
+        return img[0:self.height, 0:self.width]

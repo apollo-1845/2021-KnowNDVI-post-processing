@@ -6,8 +6,11 @@ from project_types import Data
 
 from results.color_map import fastiecm
 
-from settings import IS_PROD, USE_PNG, OUT_DIR
+from settings import IS_PROD, USE_PNG, OUT_DIR, PREFERRED_RES_NP, PREFERRED_RESOLUTION
 
+# Camera cover mask
+cam_cover_mask = np.zeros(PREFERRED_RES_NP, dtype="uint8")
+cv2.circle(cam_cover_mask, (PREFERRED_RESOLUTION[0] //2, PREFERRED_RESOLUTION[1] //2), int(PREFERRED_RESOLUTION[1]*0.4), (255, 255, 255), -1)  # White circle
 
 class CameraData(Data):
     """A photo taken from a camera, with methods to convert to NDVI."""
@@ -150,12 +153,15 @@ class CameraData(Data):
 
         return (nir, vis, ndvi)
 
+    def mask_cover(self):
+        """Use a circular mask to remove camera cover."""
+        # Mask out camera cover
+        self.image[cam_cover_mask == 0] = 0
+
     """NDVI processing"""
 
     def get_ndvi(self):
         if self.ndvi is None:
-            # Add contrast
-            self.contrast()
             # Split into channels
             nir, vis = cv2.split(self.image)
 

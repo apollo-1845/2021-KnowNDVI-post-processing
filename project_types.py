@@ -39,14 +39,3 @@ class Sensor(ABC):
     def capture_data(self):
         """Record some value and return a subclass of Data containing that value."""
         pass
-
-
-class DataPoint:
-    """A class representing a collection of available data for a certain timestamp and position"""
-
-    def __init__(self, timestamp, image):
-        self.timestamp = timestamp
-        self.image = image
-
-    def __repr__(self):
-        return f"@[{self.timestamp}]: [{self.image}]"
