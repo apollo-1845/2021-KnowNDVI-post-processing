@@ -77,8 +77,12 @@ class CameraData(Data):
         image_id = save_id
 
         nir, vis = cv2.split(self.image)
-        cv2.imwrite(os.path.join(OUT_DIR, "images", "nir", str(image_id) + "_nir.png"), nir)
-        cv2.imwrite(os.path.join(OUT_DIR, "images", "vis", str(image_id) + "_vis.png"), vis)
+        cv2.imwrite(
+            os.path.join(OUT_DIR, "images", "nir", str(image_id) + "_nir.png"), nir
+        )
+        cv2.imwrite(
+            os.path.join(OUT_DIR, "images", "vis", str(image_id) + "_vis.png"), vis
+        )
 
         # Return as bytes; dynamic size based on size of image ID
         result = int.to_bytes(
@@ -96,10 +100,14 @@ class CameraData(Data):
         load_id = int.from_bytes(b, byteorder="big")
         # print("Deserialised image file id", load_id)
         # As PNG, get from ID
-        nir = cv2.imread(os.path.join(OUT_DIR, "images", "nir", str(load_id) + "_nir.png"), \
-                         cv2.IMREAD_ANYCOLOR)
-        vis = cv2.imread(os.path.join(OUT_DIR, "images", "vis", str(load_id) + "_vis.png"), \
-                         cv2.IMREAD_ANYCOLOR)
+        nir = cv2.imread(
+            os.path.join(OUT_DIR, "images", "nir", str(load_id) + "_nir.png"),
+            cv2.IMREAD_ANYCOLOR,
+        )
+        vis = cv2.imread(
+            os.path.join(OUT_DIR, "images", "vis", str(load_id) + "_vis.png"),
+            cv2.IMREAD_ANYCOLOR,
+        )
 
         img = np.dstack((nir, vis))
 
@@ -108,14 +116,13 @@ class CameraData(Data):
     def __repr__(self):
         return f"📸(shape={self.image.shape})"
 
-    def display(self):
-        """Create a preview window of the contained image"""
+    def open(self):
         img = self.image.copy()
 
         # Fill the missing colour channel with zeroes so that it can be displayed properly
         if len(img.shape) == 3 and img.shape[2] == 2:
 
-            print(img.shape, type(img[0][0][0]))
+            # print(img.shape, type(img[0][0][0]))
 
             # Handle NaN
             nir, vis = cv2.split(img)
@@ -127,7 +134,7 @@ class CameraData(Data):
             vis = vis.astype(np.uint8)
             img = cv2.merge([nir, vis])
 
-            print(img.shape)
+            # print(img.shape)
 
             img = np.lib.pad(
                 img, ((0, 0), (0, 0), (0, 1)), "constant", constant_values=(0)
@@ -140,8 +147,15 @@ class CameraData(Data):
         title = "Camera image preview"
         cv2.namedWindow(title)  # create window
         cv2.imshow(title, img)  # display image
-        cv2.waitKey(0)  # wait for key press
+
+    def close(self):
         cv2.destroyAllWindows()
+
+    def display(self):
+        """Create a preview window of the contained image"""
+        self.open()
+        cv2.waitKey(0)  # wait for key press
+        self.close()
 
     def get_raw_channels(self):
         # Return the three channels nir, vis and ndvi for the classifier
