@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+from remove_overlapping_pictures import get_spherical_distance
+
 from misc.serialise_data_points import deserialise_from_prompt, deserialise_from_file
 
 data_points = deserialise_from_prompt()
@@ -31,8 +33,20 @@ def compare_filtered_and_unfiltered():
     ax.set_title("Coordinates of taken pictures")
 
 
+prev_point = None
 for point in data_points:
-    print(point.get_id())
+    if prev_point is None:
+        print(point.get_id())
+    else:
+        (lat1, long1) = point.get_coordinates()
+        (lat2, long2) = prev_point.get_coordinates()
+        print(
+            point.get_id(),
+            (lat1, long1),
+            (lat2, long2),
+            get_spherical_distance(lat1, long1, lat2, long2),
+        )
+    prev_point = point
 
 compare_filtered_and_unfiltered()
 
