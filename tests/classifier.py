@@ -26,10 +26,11 @@ def run_test():
     model.summary()
 
     # Get mask
-    for i, datapoint in enumerate(get_datapoints(660, 680)):  # Falkland Islands
-        print("Image", i)
-        start = time.time()
-        ndvi = datapoint.get_land_masked(model, datapoint.get_ndvi())
-        end = time.time()
-        print("Mean NDVI", np.mean(ndvi))
-        print("Took", end-start, "s to generate land-masked list of NDVIs")
+    for i, datapoint in get_datapoints(545):  # Argentina
+        if(datapoint.get_landtype() != 0): # Only on land
+            print("Image", i)
+            start = time.time()
+            ndvi = datapoint.get_land_masked(model, datapoint.get_ndvi())
+            end = time.time()
+            print("Mean NDVI", np.mean(ndvi))
+            print("Took", end-start, "s to generate land-masked list of NDVIs")

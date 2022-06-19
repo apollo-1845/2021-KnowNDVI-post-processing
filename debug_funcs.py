@@ -4,7 +4,7 @@ import os
 from parseBlob import parse_blob
 
 
-def get_datapoints(start_id: int, end_id: int = None, step:int = 1, land_type:int = None):
+def get_datapoints(start_id: int, end_id: int = None, step:int = 1):
     """A generator of (id_num, datapoint) for debug purposes"""
     if(end_id is None): end_id = start_id
     # Get dp
@@ -18,11 +18,7 @@ def get_datapoints(start_id: int, end_id: int = None, step:int = 1, land_type:in
             # print(i, "at end")
             break
         elif (i >= start_id):
-            if(land_type is not None):
-                if(point.get_landtype() == land_type):
-                    yield i, point
-            else:
-                yield i, point
+            yield i, point
         else:
             # print(i, "before start")
             pass

@@ -245,8 +245,8 @@ class CameraData(Data):
         img = self.image
 
         # Get boundaries
-        in_min = np.nanpercentile(img, 5)
-        in_max = np.nanpercentile(img, 95)
+        in_min = np.nanpercentile(img, 0)
+        in_max = np.nanpercentile(img, 100)
         # print(in_min, in_max)
         out_min = 0.0
         out_max = 255.0

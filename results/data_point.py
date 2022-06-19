@@ -54,11 +54,17 @@ class DataPoint:
         classifier = Classifier(channels, model)
         mask = classifier.predict_image()
 
-        # # Debug - show masked ndvi
-        # res = classifier.crop_to_tiles(deepcopy(self.get_camera_data().image))
-        # res[np.logical_not(mask)] = res[np.logical_not(mask)] // 3
-        # view_img = CameraData.from_processed_np_array(res)
-        # view_img.display()
+        # Debug - show masked image and ndvi
+        res = classifier.crop_to_tiles(deepcopy(self.get_camera_data().image))
+        res[np.logical_not(mask)] = res[np.logical_not(mask)] // 3
+        view_img = CameraData.from_processed_np_array(res)
+        view_img.display()
+
+        demo_img = classifier.crop_to_tiles(deepcopy(img.image))
+        demo_img[np.logical_not(mask)] = 0
+        view_img = CameraData.from_processed_np_array(demo_img)
+        view_img.contrast()
+        view_img.display()
 
         return classifier.crop_to_tiles(img.image)[mask]
 
