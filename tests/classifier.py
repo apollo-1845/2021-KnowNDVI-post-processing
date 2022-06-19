@@ -26,7 +26,7 @@ def run_test():
     model.summary()
 
     # Get mask
-    for i, datapoint in get_datapoints(545):  # Argentina
+    for i, datapoint in get_datapoints(0, 4000, 10):
         if(datapoint.get_landtype() != 0): # Only on land
             print("Image", i)
             start = time.time()
