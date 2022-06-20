@@ -12,23 +12,38 @@ from settings import CLASSIFIER_TILE_SIZE as TILE_SIZE
 """Constants for cropping image to place in model"""
 from settings import CLASSIFIER_CROP_SIZE as CROP_SIZE
 
+import os
+from tensorflow import (
+    keras,
+)  # Trained and created separately; load the TF model into the classifier
+
 PIXELS_TO_CENTRE = CROP_SIZE // 2
 PIXELS_TO_CENTRE_2 = CROP_SIZE - PIXELS_TO_CENTRE
+
+MODEL = None
+
+
+def load_model():
+    print("Loading model...")
+    model = keras.models.load_model(os.path.join("data", "classifier", "model"))
+
+    model.summary()
 
 
 class Classifier:
     """Using a TensorFlow Neural Network to predict where land is. Create a `Classifier`, then `predict_image` to get the land mask."""
 
-    def __init__(self, channels, model):
+    def __init__(self, channels):
         """Create a `Classifier`"""
         # Save channels
         self.nir, self.vis, self.ndvi = channels
 
-        # Save NN
-        self.model = model
-
-        self.height = (self.vis.shape[0] // TILE_SIZE) * TILE_SIZE  # Multiple of tile_size
-        self.width = (self.vis.shape[1] // TILE_SIZE) * TILE_SIZE  # Multiple of tile_size
+        self.height = (
+            self.vis.shape[0] // TILE_SIZE
+        ) * TILE_SIZE  # Multiple of tile_size
+        self.width = (
+            self.vis.shape[1] // TILE_SIZE
+        ) * TILE_SIZE  # Multiple of tile_size
 
     def get_crop(self, x: int, y: int):
         """Get the cropped portion of the image from nir, vis and ndvi"""
@@ -44,21 +59,21 @@ class Classifier:
         vis_crop = self.vis[start_y:end_y, start_x:end_x]
         ndvi_crop = self.ndvi[start_y:end_y, start_x:end_x]
 
-        if (start_y < 0):
+        if start_y < 0:
             for i in range(CROP_SIZE - nir_crop.shape[0]):
                 empty_line = Classifier.create_empty_col(nir_crop.shape[1])  # Width
                 nir_crop = np.vstack([empty_line, nir_crop])  # Vertical, before
                 vis_crop = np.vstack([empty_line, vis_crop])  # Vertical, before
                 ndvi_crop = np.vstack([empty_line, ndvi_crop])  # Vertical, before
             # print("-y>", nir_crop.shape, vis_crop.shape, start_x, start_y)
-        elif (end_y > height):
+        elif end_y > height:
             for i in range(CROP_SIZE - nir_crop.shape[0]):
                 empty_line = Classifier.create_empty_col(nir_crop.shape[1])  # Width
                 nir_crop = np.vstack([nir_crop, empty_line])  # Vertical, after
                 vis_crop = np.vstack([vis_crop, empty_line])  # Vertical, after
                 ndvi_crop = np.vstack([ndvi_crop, empty_line])  # Vertical, after
             # print("+y>", nir_crop.shape, vis_crop.shape, start_x, start_y)
-        if (start_x < 0):
+        if start_x < 0:
             for i in range(CROP_SIZE - nir_crop.shape[1]):
                 empty_line = Classifier.create_empty_row(nir_crop.shape[0])  # Height
                 nir_crop = np.hstack([empty_line, nir_crop])  # Horizontal, before
@@ -66,7 +81,7 @@ class Classifier:
                 ndvi_crop = np.hstack([empty_line, ndvi_crop])  # Horizontal, before
                 # print(nir_crop)
             # print("-x>", nir_crop.shape, vis_crop.shape, start_x, start_y)
-        elif (end_x > width):
+        elif end_x > width:
             for i in range(CROP_SIZE - nir_crop.shape[1]):
                 empty_line = Classifier.create_empty_row(nir_crop.shape[0])  # Height
                 nir_crop = np.hstack([nir_crop, empty_line])  # Horizontal, after
@@ -80,30 +95,36 @@ class Classifier:
         """Return a mask of which pixels are land from the nir, vis and ndvi channels. If this is slow, update `settings."""
         crops = []
 
-        where_useful = [] # Don't pass through NN - camera cover
+        where_useful = []  # Don't pass through NN - camera cover
 
         for y in range(0, self.height, TILE_SIZE):
             for x in range(0, self.width, TILE_SIZE):
-                is_useful = (self.vis[y, x] > 0) and (self.nir[y, x] > 0) # Not camera cover / night; can pass through NN
+                is_useful = (self.vis[y, x] > 0) and (
+                    self.nir[y, x] > 0
+                )  # Not camera cover / night; can pass through NN
                 where_useful.append(is_useful)
                 if is_useful:
                     # Not completely black
-                    crop = cv2.merge(self.get_crop(x, y)) # Merge channels returned
+                    crop = cv2.merge(self.get_crop(x, y))  # Merge channels returned
                     # cv2_imshow(crop[1])
                     # print(x, y, nir[y, x], vis[y, x])
                     # cv2_imshow(crop[1])
                     crops.append(crop)
 
         crops = np.array(crops)
-        prediction = self.model.predict(crops)
+        prediction = MODEL.predict(crops)
 
         # Add cover - 0 certainty at camera cover
         shaped_prediction = np.zeros(len(where_useful))
-        shaped_prediction[where_useful] = np.reshape(prediction, (-1)) # 1D
+        shaped_prediction[where_useful] = np.reshape(prediction, (-1))  # 1D
 
         # Reshape into grid
-        shaped_prediction = np.reshape(shaped_prediction, (self.height // TILE_SIZE, self.width // TILE_SIZE))  # grid
-        shaped_prediction = cv2.resize(shaped_prediction, None, None, TILE_SIZE, TILE_SIZE, cv2.INTER_NEAREST)  # Nearest neighbour
+        shaped_prediction = np.reshape(
+            shaped_prediction, (self.height // TILE_SIZE, self.width // TILE_SIZE)
+        )  # grid
+        shaped_prediction = cv2.resize(
+            shaped_prediction, None, None, TILE_SIZE, TILE_SIZE, cv2.INTER_NEAREST
+        )  # Nearest neighbour
 
         return self.prediction_to_mask(shaped_prediction)
 
@@ -111,7 +132,6 @@ class Classifier:
         """Change float prediction certainty matrix to a boolean land mask"""
 
         return prediction > CERTAINTY_THRESHOLD
-
 
     @staticmethod
     def create_empty_col(length):
@@ -125,4 +145,4 @@ class Classifier:
 
     def crop_to_tiles(self, img):
         """Crop an image to make it the same shape as the mask."""
-        return img[0:self.height, 0:self.width]
+        return img[0 : self.height, 0 : self.width]

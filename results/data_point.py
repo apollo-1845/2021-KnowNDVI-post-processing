@@ -14,6 +14,7 @@ landtype = ASCReader(
 )  # Legend: https://www.researchgate.net/profile/Annemarie_Schneider/publication/261707258/figure/download/fig3/AS:296638036889602@1447735427158/Early-result-from-MODIS-showing-the-global-map-of-land-cover-based-on-the-IGBP.png
 # A helpful site for debugging: https://www.findlatitudeandlongitude.com/
 
+
 class DataPoint:
     """A class representing a collection of available data for a certain timestamp and position"""
 
@@ -25,6 +26,7 @@ class DataPoint:
         self._timestamp = TimeStampData.deserialise(timestamp_data_raw)
         self._coordinates = None
         self._camera_data = None
+        self._masked_ndvi = None
 
     def get_id(self):
         return self._id
@@ -35,7 +37,7 @@ class DataPoint:
     def get_camera_data(self):
         if self._camera_data is None:
             self._camera_data = CameraData.deserialise_as_png(self._camera_data_raw)
-            self._camera_data.mask_cover() # Always remove camera cover
+            self._camera_data.mask_cover()  # Always remove camera cover
         return self._camera_data
 
     def get_coordinates(self):
@@ -47,11 +49,11 @@ class DataPoint:
         loc = self.get_coordinates()
         return landtype.get(loc[0], loc[1])
 
-    def get_land_masked(self, model, img:CameraData) -> np.array:
+    def get_land_masked(self, img: CameraData) -> np.array:
         """Return img to an array of values where this image is land, using the classifier Convolutional Neural Network inputted"""
         # Get classification mask
         channels = self.get_camera_data().get_raw_channels()
-        classifier = Classifier(channels, model)
+        classifier = Classifier(channels)
         mask = classifier.predict_image()
 
         # # Debug - show masked ndvi
@@ -62,9 +64,13 @@ class DataPoint:
 
         return classifier.crop_to_tiles(img.image)[mask]
 
-
     def get_ndvi(self):
         return self.get_camera_data().get_ndvi()
+
+    def get_masked_ndvi_values(self):
+        if self._masked_ndvi is None:
+            self._masked_ndvi = self.get_land_masked(self.get_ndvi())
+        return self._masked_ndvi
 
     def serialise(self):
         return {

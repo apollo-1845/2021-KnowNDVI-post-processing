@@ -5,9 +5,13 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+from classifier.predict import load_model
+
 from remove_overlapping_pictures import get_spherical_distance
 
 from misc.serialise_data_points import deserialise_from_prompt, deserialise_from_file
+
+load_model()
 
 data_points = deserialise_from_prompt()
 
@@ -41,6 +45,8 @@ for point in data_points:
         (lat1, long1) = point.get_coordinates()
         (lat2, long2) = prev_point.get_coordinates()
         print(
+            point.get_ndvi(),
+            point.get_masked_ndvi_values(),
             point.get_id(),
             (lat1, long1),
             (lat2, long2),

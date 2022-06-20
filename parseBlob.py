@@ -58,6 +58,7 @@ def parse_blob(fileName):
                 raise e
 
 
-data_points = parse_blob(OUT_FILE)
+if __name__ == "__main__":
+    data_points = parse_blob(OUT_FILE)
 
-serialise_from_prompt(data_points, "full_data")
+    serialise_from_prompt(data_points, "full_data")
