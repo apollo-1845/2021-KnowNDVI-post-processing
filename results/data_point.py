@@ -10,7 +10,7 @@ from results.camera_data import CameraData
 from results.timestamp_data import TimeStampData
 
 landtype = ASCReader(
-    "data/datasets/modis_landcover_class_qd.asc"
+    "data/datasets/land_cover.asc"
 )  # Legend: https://www.researchgate.net/profile/Annemarie_Schneider/publication/261707258/figure/download/fig3/AS:296638036889602@1447735427158/Early-result-from-MODIS-showing-the-global-map-of-land-cover-based-on-the-IGBP.png
 # A helpful site for debugging: https://www.findlatitudeandlongitude.com/
 
