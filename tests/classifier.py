@@ -2,7 +2,6 @@
 import time
 
 from debug_funcs import get_datapoints
-from classifier.predict import load_model
 
 import tensorflow as tf
 import numpy as np
@@ -18,9 +17,6 @@ print("TF Version", tf.__version__)
 
 
 def run_test():
-    # Load NN model
-    load_model()
-
     # Get mask
     for i, datapoint in get_datapoints(0, 4000, 10):
         if datapoint.get_landtype() != 0:  # Only on land

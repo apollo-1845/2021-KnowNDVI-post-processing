@@ -13,9 +13,8 @@ from settings import CLASSIFIER_TILE_SIZE as TILE_SIZE
 from settings import CLASSIFIER_CROP_SIZE as CROP_SIZE
 
 import os
-from tensorflow import (
-    keras,
-)  # Trained and created separately; load the TF model into the classifier
+
+from tensorflow import keras
 
 PIXELS_TO_CENTRE = CROP_SIZE // 2
 PIXELS_TO_CENTRE_2 = CROP_SIZE - PIXELS_TO_CENTRE
@@ -24,10 +23,11 @@ MODEL = None
 
 
 def load_model():
+    global MODEL
     print("Loading model...")
-    model = keras.models.load_model(os.path.join("data", "classifier", "model"))
-
-    model.summary()
+    MODEL = keras.models.load_model(os.path.join("data", "classifier", "model"))
+    print("Finished loading the model", MODEL)
+    print(MODEL.summary())
 
 
 class Classifier:
@@ -112,6 +112,10 @@ class Classifier:
                     crops.append(crop)
 
         crops = np.array(crops)
+        if MODEL is None:
+            load_model()
+        print(MODEL)
+
         prediction = MODEL.predict(crops)
 
         # Add cover - 0 certainty at camera cover

@@ -5,13 +5,9 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-from classifier.predict import load_model
-
 from remove_overlapping_pictures import get_spherical_distance
 
 from misc.serialise_data_points import deserialise_from_prompt, deserialise_from_file
-
-load_model()
 
 data_points = deserialise_from_prompt()
 
