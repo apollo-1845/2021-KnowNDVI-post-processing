@@ -8,6 +8,8 @@
 | Dataset               | Use                           |
 |-----------------------|-------------------------------|
 | ISLSCP_II_MODISLC_968 | Getting land cover categories |
+|  | Natural -                     |
+|                       | Human -                       |
 
 ## Notes
 

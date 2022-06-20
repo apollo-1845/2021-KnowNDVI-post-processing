@@ -18,11 +18,11 @@ print("TF Version", tf.__version__)
 
 def run_test():
     # Get mask
-    for i, datapoint in get_datapoints(0, 4000, 10):
+    for i, datapoint in get_datapoints(600, 700, 10):
         if datapoint.get_landtype() != 0:  # Only on land
             print("Image", i)
             start = time.time()
-            ndvi = datapoint.get_land_masked(model, datapoint.get_ndvi())
+            ndvi = datapoint.get_land_masked(datapoint.get_ndvi())
             end = time.time()
             print("Mean NDVI", np.mean(ndvi))
             print("Took", end - start, "s to generate land-masked list of NDVIs")

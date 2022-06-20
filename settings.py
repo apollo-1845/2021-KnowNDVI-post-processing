@@ -21,4 +21,4 @@ ISS_TLE_2 = "2 25544  51.6431 189.5223 0006686  66.4371  32.9954 15.499372733385
 # Classifier - Neural Network
 CLASSIFIER_CROP_SIZE = 9  # 9px x 9px inputted
 CLASSIFIER_TILE_SIZE = 5  # 5px x 5px squares on mask result - increase to speed up
-CLASSIFIER_CERTAINTY_THRESHOLD = 0.15  # If more certain than this, land
+CLASSIFIER_CERTAINTY_THRESHOLD = 0.5  # If more certain than this, land

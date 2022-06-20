@@ -95,21 +95,21 @@ class Classifier:
         """Return a mask of which pixels are land from the nir, vis and ndvi channels. If this is slow, update `settings."""
         crops = []
 
-        where_useful = []  # Don't pass through NN - camera cover
+        where_useful = [] # Don't pass through NN - camera cover
 
         for y in range(0, self.height, TILE_SIZE):
             for x in range(0, self.width, TILE_SIZE):
-                is_useful = (self.vis[y, x] > 0) and (
-                    self.nir[y, x] > 0
-                )  # Not camera cover / night; can pass through NN
+                is_useful = (self.vis[y, x] > 0) and (self.nir[y, x] > 0) # Not camera cover / night; can pass through NN
                 where_useful.append(is_useful)
                 if is_useful:
                     # Not completely black
-                    crop = cv2.merge(self.get_crop(x, y))  # Merge channels returned
+                    crop = cv2.merge(self.get_crop(x, y)) # Merge channels returned
                     # cv2_imshow(crop[1])
                     # print(x, y, nir[y, x], vis[y, x])
                     # cv2_imshow(crop[1])
                     crops.append(crop)
+
+
 
         crops = np.array(crops)
         if MODEL is None:
@@ -120,15 +120,11 @@ class Classifier:
 
         # Add cover - 0 certainty at camera cover
         shaped_prediction = np.zeros(len(where_useful))
-        shaped_prediction[where_useful] = np.reshape(prediction, (-1))  # 1D
+        shaped_prediction[where_useful] = np.reshape(prediction, (-1)) # 1D
 
         # Reshape into grid
-        shaped_prediction = np.reshape(
-            shaped_prediction, (self.height // TILE_SIZE, self.width // TILE_SIZE)
-        )  # grid
-        shaped_prediction = cv2.resize(
-            shaped_prediction, None, None, TILE_SIZE, TILE_SIZE, cv2.INTER_NEAREST
-        )  # Nearest neighbour
+        shaped_prediction = np.reshape(shaped_prediction, (self.height // TILE_SIZE, self.width // TILE_SIZE))  # grid
+        shaped_prediction = cv2.resize(shaped_prediction, None, None, TILE_SIZE, TILE_SIZE, cv2.INTER_NEAREST)  # Nearest neighbour
 
         return self.prediction_to_mask(shaped_prediction)
 
@@ -136,6 +132,7 @@ class Classifier:
         """Change float prediction certainty matrix to a boolean land mask"""
 
         return prediction > CERTAINTY_THRESHOLD
+
 
     @staticmethod
     def create_empty_col(length):
@@ -149,4 +146,4 @@ class Classifier:
 
     def crop_to_tiles(self, img):
         """Crop an image to make it the same shape as the mask."""
-        return img[0 : self.height, 0 : self.width]
+        return img[0:self.height, 0:self.width]
