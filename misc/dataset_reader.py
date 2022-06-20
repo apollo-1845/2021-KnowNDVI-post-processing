@@ -18,7 +18,7 @@ class ASCReader(Reader):
             """Load properties"""
             self.properties = {}
             line = reader.readline()
-            while line[0] not in "0123456789":
+            while line[0] not in "-0123456789":
                 # Add property
                 prop = line.strip().split(" ")  # Remove newline, format
                 self.properties[prop[0]] = float(prop[1])
@@ -42,6 +42,7 @@ class ASCReader(Reader):
         )  # Reverse y axis as latitude points down
 
         data = self.data[y_coords][x_coords]
+
         if data == self.properties["NODATA_value"]:
             return None  # No data
         return data

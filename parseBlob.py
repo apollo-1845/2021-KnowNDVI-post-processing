@@ -6,6 +6,8 @@ from misc.dataset_reader import ASCReader
 
 from misc.serialise_data_points import serialise_from_prompt
 
+from results.timestamp_data import TimeStampData
+
 
 def parse_blob(fileName):
     file = open(fileName, "rb")
@@ -49,7 +51,9 @@ def parse_blob(fileName):
 
             data_point_completely_parsed = True
 
-            yield DataPoint(*data_point_params)
+            yield DataPoint.from_timestamp(
+                TimeStampData.deserialise(data_point_params[0]), data_point_params[1]
+            )
         except EOFError as e:
             # if normal end of file, simply return
             if data_point_completely_parsed:

@@ -13,20 +13,41 @@ landtype = ASCReader(
     "data/datasets/land_cover.asc"
 )  # Legend: https://www.researchgate.net/profile/Annemarie_Schneider/publication/261707258/figure/download/fig3/AS:296638036889602@1447735427158/Early-result-from-MODIS-showing-the-global-map-of-land-cover-based-on-the-IGBP.png
 # A helpful site for debugging: https://www.findlatitudeandlongitude.com/
+expected_ndvi = ASCReader("data/datasets/ndvi.asc")
+
+artificial_data_point_id = 0
 
 
 class DataPoint:
     """A class representing a collection of available data for a certain timestamp and position"""
 
-    def __init__(self, timestamp_data_raw, camera_data_raw):
-        self._id = int.from_bytes(camera_data_raw, byteorder="big")
-        self._timestamp_data_raw = timestamp_data_raw
-        self._camera_data_raw = camera_data_raw
-
-        self._timestamp = TimeStampData.deserialise(timestamp_data_raw)
+    def __init__(self):
         self._coordinates = None
         self._camera_data = None
         self._masked_ndvi = None
+        self._timestamp = None
+        self._id = None
+        self._camera_data_raw = None
+
+    def from_timestamp(timestamp, camera_data_raw):
+        out = DataPoint()
+        out._id = int.from_bytes(camera_data_raw, byteorder="big")
+        out._camera_data_raw = camera_data_raw
+
+        out._timestamp = timestamp
+
+        return out
+
+    def from_coordinates(coords):
+        global artificial_data_point_id
+        out = DataPoint()
+
+        out._id = artificial_data_point_id
+        artificial_data_point_id += 1
+
+        out._coordinates = coords
+
+        return out
 
     def get_id(self):
         return self._id
@@ -35,6 +56,8 @@ class DataPoint:
         return self._timestamp
 
     def get_camera_data(self):
+        if self._camera_data_raw is None:
+            return None
         if self._camera_data is None:
             self._camera_data = CameraData.deserialise_as_png(self._camera_data_raw)
             self._camera_data.mask_cover()  # Always remove camera cover
@@ -48,6 +71,10 @@ class DataPoint:
     def get_landtype(self):
         loc = self.get_coordinates()
         return landtype.get(loc[0], loc[1])
+
+    def get_expected_ndvi(self):
+        loc = self.get_coordinates()
+        return expected_ndvi.get(loc[0], loc[1])
 
     def get_land_masked(self, img: CameraData) -> np.array:
         """Return img to an array of values where this image is land, using the classifier Convolutional Neural Network inputted"""
@@ -79,13 +106,27 @@ class DataPoint:
         return self._masked_ndvi
 
     def serialise(self):
-        return {
-            "timestamp_data_raw": self._timestamp_data_raw.hex(),
-            "camera_data_raw": self._camera_data_raw.hex(),
-        }
+        if self._timestamp is None:
+            return {
+                "lat": self._coordinates[0],
+                "long": self._coordinates[1],
+            }
+        else:
+            return {
+                "timestamp": self._timestamp.serialise().hex(),
+                "camera_data_raw": self._camera_data_raw.hex(),
+            }
 
     def deserialise(serialised):
-        return DataPoint(
-            bytes.fromhex(serialised["timestamp_data_raw"]),
-            bytes.fromhex(serialised["camera_data_raw"]),
-        )
+        try:
+            timestamp = TimeStampData.deserialise(
+                bytes.fromhex(serialised["timestamp"])
+            )
+            camera_data_raw = serialised["camera_data_raw"]
+            return DataPoint.from_timestamp(
+                timestamp,
+                bytes.fromhex(camera_data_raw),
+            )
+        # if no timestamp, don't panic!
+        except:
+            return DataPoint.from_coordinates((serialised["lat"], serialised["long"]))
