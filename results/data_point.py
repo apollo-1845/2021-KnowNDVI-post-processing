@@ -9,12 +9,19 @@ from misc.dataset_reader import ASCReader
 from results.camera_data import CameraData
 from results.timestamp_data import TimeStampData
 
-landtype = ASCReader(
-    "data/datasets/land_cover.asc"
-)  # Legend: https://www.researchgate.net/profile/Annemarie_Schneider/publication/261707258/figure/download/fig3/AS:296638036889602@1447735427158/Early-result-from-MODIS-showing-the-global-map-of-land-cover-based-on-the-IGBP.png
 # A helpful site for debugging: https://www.findlatitudeandlongitude.com/
+"""Datasets"""
 expected_ndvi = ASCReader("data/datasets/ndvi.asc")
+land_cover = ASCReader("data/datasets/land_cover.asc")  # Legend: https://www.researchgate.net/profile/Annemarie_Schneider/publication/261707258/figure/download/fig3/AS:296638036889602@1447735427158/Early-result-from-MODIS-showing-the-global-map-of-land-cover-based-on-the-IGBP.png
+
 population_density = ASCReader("data/datasets/population_density.asc")
+co2_emissions = ASCReader("data/datasets/co2_emissions.asc")
+historical_land_use = ASCReader("data/datasets/historical_land_use.asc")
+gdp = ASCReader("data/datasets/gdp.asc")
+precipitation = ASCReader("data/datasets/precipitation.asc")
+temperature = ASCReader("data/datasets/temperature.asc")
+radiation = ASCReader("data/datasets/radiation.asc")
+
 
 artificial_data_point_id = 0
 
@@ -69,24 +76,44 @@ class DataPoint:
             self._coordinates = self._timestamp.to_location()
         return self._coordinates
 
-    def get_landtype(self):
-        loc = self.get_coordinates()
-        return landtype.get(loc[0], loc[1])
-
+    """Datasets"""
     def get_expected_ndvi(self):
         loc = self.get_coordinates()
-        # a value of -77 represents data that is not useful
-        out = expected_ndvi.get(loc[0], loc[1])
-        if out is None or out <= -50:
-            return None
-        return out
+        res = expected_ndvi.get(loc[0], loc[1])
+        if (res is None) or (res > 1 or res < -1): return None # Not possible
+        return res
+
+    def get_land_cover(self):
+        loc = self.get_coordinates()
+        return land_cover.get(loc[0], loc[1])
 
     def get_population_density(self):
         loc = self.get_coordinates()
-        out = population_density.get(loc[0], loc[1])
-        if out is None or out < 0:
-            return None
-        return out
+        return population_density.get(loc[0], loc[1])
+
+    def get_co2_emissions(self):
+        loc = self.get_coordinates()
+        return co2_emissions.get(loc[0], loc[1])
+
+    def get_historical_land_use(self):
+        loc = self.get_coordinates()
+        return historical_land_use.get(loc[0], loc[1])
+
+    def get_gdp(self):
+        loc = self.get_coordinates()
+        return gdp.get(loc[0], loc[1])
+
+    def get_precipitation(self):
+        loc = self.get_coordinates()
+        return precipitation.get(loc[0], loc[1])
+
+    def get_temperature(self):
+        loc = self.get_coordinates()
+        return temperature.get(loc[0], loc[1])
+
+    def get_radiation(self):
+        loc = self.get_coordinates()
+        return radiation.get(loc[0], loc[1])
 
     def get_land_masked(self, img: CameraData) -> np.array:
         """Return img to an array of values where this image is land, using the classifier Convolutional Neural Network inputted"""
@@ -94,6 +121,10 @@ class DataPoint:
         channels = self.get_camera_data().get_raw_channels()
         classifier = Classifier(channels)
         mask = classifier.predict_image()
+
+        view_img = deepcopy(img)
+        view_img.contrast()
+        view_img.display()
 
         # Debug - show masked image and ndvi
         res = classifier.crop_to_tiles(deepcopy(self.get_camera_data().image))

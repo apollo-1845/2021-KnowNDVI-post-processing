@@ -18,8 +18,8 @@ print("TF Version", tf.__version__)
 
 def run_test():
     # Get mask
-    for i, datapoint in get_datapoints(600, 700, 10):
-        if datapoint.get_landtype() != 0:  # Only on land
+    for i, datapoint in get_datapoints(670, 700, 10):
+        if datapoint.get_land_cover() != 0:  # Only on land
             print("Image", i)
             start = time.time()
             ndvi = datapoint.get_land_masked(datapoint.get_ndvi())

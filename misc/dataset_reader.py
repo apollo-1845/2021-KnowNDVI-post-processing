@@ -24,6 +24,8 @@ class ASCReader(Reader):
                 self.properties[prop[0]] = float(prop[-1])
                 line = reader.readline()
 
+            print("ASC", file, self.properties)
+
             """Load data"""
             self.data = []  # 2D array
             while line != "":
@@ -43,6 +45,6 @@ class ASCReader(Reader):
 
         data = self.data[y_coords][x_coords]
 
-        if data == self.properties["NODATA_value"]:
+        if data == self.properties["NODATA_value"]: # Return None for useless data
             return None  # No data
         return data
