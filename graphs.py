@@ -49,8 +49,7 @@ def overall_hist(values, row_id, label):
     fig.show()
 
 
-def linear_plot(values, x_row_id, y_row_id, x_label, y_label):
-    (x, y) = filter_rows(values, [x_row_id, y_row_id])
+def linear_plot(x, y, x_label, y_label):
     fig, ax = plt.subplots()  # Create a figure containing a single axes.
 
     ax.scatter(x, y)
@@ -61,6 +60,24 @@ def linear_plot(values, x_row_id, y_row_id, x_label, y_label):
     fig.show()
 
 
+def plot_3d(x, y, values, x_label, y_label, z_label):
+    fig, ax = plt.subplots()  # Create a figure containing a single axes.
+
+    fig = plt.figure()
+    ax = fig.add_subplot(projection="3d")
+
+    print("x", x)
+    print("y", y)
+    ax.contour3D(x, y, values, 50)
+
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+    ax.set_zlabel(z_label)
+
+    # ax.bar3d(x, y, z, dx, dy, dz, zsort="average")
+    fig.show()
+
+
 def filter_rows(values, axes):
     out = values[axes, ...]
     # Remove all columns with at least one NaN value
@@ -68,25 +85,42 @@ def filter_rows(values, axes):
     return out[:, mask]
 
 
-def to_frequencies(array, bins=10):
-    array = array.flat
-    min = np.min(array)
-    max = np.max(array)
+def to_frequencies(values, bins):
+    assert len(bins) == values.shape[0]
+
+    bins = np.array(bins)
+    min = np.min(values, axis=1)
+    max = np.max(values, axis=1)
 
     arr_range = max - min
 
     bin_width = arr_range / bins
 
-    out = [[] for i in range(bins)]
-    for el in array:
-        bin_index = int(np.floor((el - min) / arr_range * bins).item())
-        # do not go outside of the array
-        if bin_index == bins:
-            bin_index = bins - 1
-        out[bin_index].append(el)
+    frequencies = np.zeros(bins)
+    for el in values.T:
+        bin_index = np.floor((el - min) / arr_range * bins).astype(int)
+        # avoid out of bounds with min or max
+        bin_index = np.clip(bin_index, 0, bins - 1)
+        # A tuple allows us to index the proper position
+        frequencies[tuple(bin_index)] += 1
 
-    out = [[min + (i + 0.5) * bin_width, len(sub_arr)] for i, sub_arr in enumerate(out)]
-    return np.array(out).T
+    argmax = np.unravel_index(np.argmax(frequencies, axis=None), frequencies.shape)
+    print("argmax", argmax)
+    print("freq", frequencies[argmax])
+    print("min", min)
+    print("max", max)
+    print("predicted", min + argmax / bins * arr_range)
+
+    # return the positions of the buckets and the frequencies
+    bucket_points = [np.linspace(min[i], max[i], bin) for i, bin in enumerate(bins)]
+    print("bucket_points", bucket_points)
+    return (np.array(bucket_points), frequencies.T)
+
+    # out = []
+    # for index, el in np.ndenumerate(frequencies):
+    #     middle_point = min + (index + 0.5) / bins * arr_range
+    #     out.append([*middle_point, el])
+    # return np.array(out).T
 
 
 # compare_old_and_new()
@@ -109,20 +143,20 @@ data = np.array(
     dtype=float,
 )
 
-print("Data generated")
-
 overall_hist(data, 0, expected_ndvi_values_label)
 overall_hist(data, 2, pop_density_scaled_label)
 
-frequency_data = to_frequencies(np.array(expected_ndvi_values), bins=30)
-print(frequency_data)
+(bucket_points, frequency_data) = to_frequencies(
+    filter_rows(data, [0, 2]), bins=[30, 10]
+)
 
-linear_plot(
+plot_3d(
+    bucket_points[0],
+    bucket_points[1],
     frequency_data,
-    0,
-    1,
-    "a",
-    "b",
+    expected_ndvi_values_label,
+    pop_density_scaled_label,
+    "Frequency",
 )
 
 # do not close the plots immediately
