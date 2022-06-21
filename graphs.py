@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import numpy as np
-from math import log
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -38,7 +37,8 @@ def compare_old_and_new():
     fig.show()
 
 
-def overall_hist(values, label):
+def overall_hist(values, row_id, label):
+    values = filter_rows(values, [row_id]).flatten()
     fig, ax = plt.subplots()  # Create a figure containing a single axes.
 
     ax.hist(values, bins=30)
@@ -49,7 +49,8 @@ def overall_hist(values, label):
     fig.show()
 
 
-def linear_plot(x, y, x_label, y_label):
+def linear_plot(values, x_row_id, y_row_id, x_label, y_label):
+    (x, y) = filter_rows(values, [x_row_id, y_row_id])
     fig, ax = plt.subplots()  # Create a figure containing a single axes.
 
     ax.scatter(x, y)
@@ -60,32 +61,69 @@ def linear_plot(x, y, x_label, y_label):
     fig.show()
 
 
-def remove_none(arr):
-    return list(filter(None, arr))
+def filter_rows(values, axes):
+    out = values[axes, ...]
+    # Remove all columns with at least one NaN value
+    mask = ~np.isnan(out).any(axis=0)
+    return out[:, mask]
+
+
+def to_frequencies(array, bins=10):
+    array = array.flat
+    min = np.min(array)
+    max = np.max(array)
+
+    arr_range = max - min
+
+    bin_width = arr_range / bins
+
+    out = [[] for i in range(bins)]
+    for el in array:
+        bin_index = int(np.floor((el - min) / arr_range * bins).item())
+        # do not go outside of the array
+        if bin_index == bins:
+            bin_index = bins - 1
+        out[bin_index].append(el)
+
+    out = [[min + (i + 0.5) * bin_width, len(sub_arr)] for i, sub_arr in enumerate(out)]
+    return np.array(out).T
 
 
 # compare_old_and_new()
 
-expected_ndvi_values = [point.get_expected_ndvi() for point in data_points]
-expected_ndvi_values = remove_none(expected_ndvi_values)
 expected_ndvi_values_label = "Dataset NDVI value"
-
-population_densities = [point.get_population_density() for point in data_points]
-population_densities_scaled = [
-    log(point) for point in population_densities if point is not None
-]
-population_densities = remove_none(population_densities)
-
+pop_density_label = "Population density"
 pop_density_scaled_label = "ln(population density)"
 
-overall_hist(expected_ndvi_values, expected_ndvi_values_label)
-overall_hist(population_densities_scaled, pop_density_scaled_label)
+expected_ndvi_values = [point.get_expected_ndvi() for point in data_points]
+population_densities = [point.get_population_density() for point in data_points]
+population_densities_scaled = []
+for pop in population_densities:
+    if pop is None or pop == 0:
+        population_densities_scaled.append(None)
+    else:
+        population_densities_scaled.append(np.log(pop))
 
-# linear_plot(
-#     population_densities_scaled,
-#     expected_ndvi_values,
-#     pop_density_scaled_label,
-#     expected_ndvi_values_label,
-# )
-# wait for the plot to be closed
+data = np.array(
+    [expected_ndvi_values, population_densities, population_densities_scaled],
+    dtype=float,
+)
+
+print("Data generated")
+
+overall_hist(data, 0, expected_ndvi_values_label)
+overall_hist(data, 2, pop_density_scaled_label)
+
+frequency_data = to_frequencies(np.array(expected_ndvi_values), bins=30)
+print(frequency_data)
+
+linear_plot(
+    frequency_data,
+    0,
+    1,
+    "a",
+    "b",
+)
+
+# do not close the plots immediately
 input()
