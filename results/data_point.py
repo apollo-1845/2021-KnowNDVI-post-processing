@@ -14,6 +14,7 @@ landtype = ASCReader(
 )  # Legend: https://www.researchgate.net/profile/Annemarie_Schneider/publication/261707258/figure/download/fig3/AS:296638036889602@1447735427158/Early-result-from-MODIS-showing-the-global-map-of-land-cover-based-on-the-IGBP.png
 # A helpful site for debugging: https://www.findlatitudeandlongitude.com/
 expected_ndvi = ASCReader("data/datasets/ndvi.asc")
+population_density = ASCReader("data/datasets/population_density.asc")
 
 artificial_data_point_id = 0
 
@@ -74,7 +75,18 @@ class DataPoint:
 
     def get_expected_ndvi(self):
         loc = self.get_coordinates()
-        return expected_ndvi.get(loc[0], loc[1])
+        # a value of -77 represents data that is not useful
+        out = expected_ndvi.get(loc[0], loc[1])
+        if out is None or out <= -50:
+            return None
+        return out
+
+    def get_population_density(self):
+        loc = self.get_coordinates()
+        out = population_density.get(loc[0], loc[1])
+        if out is None or out < 0:
+            return None
+        return out
 
     def get_land_masked(self, img: CameraData) -> np.array:
         """Return img to an array of values where this image is land, using the classifier Convolutional Neural Network inputted"""

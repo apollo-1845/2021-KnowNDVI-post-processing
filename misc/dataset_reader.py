@@ -21,13 +21,13 @@ class ASCReader(Reader):
             while line[0] not in "-0123456789":
                 # Add property
                 prop = line.strip().split(" ")  # Remove newline, format
-                self.properties[prop[0]] = float(prop[1])
+                self.properties[prop[0]] = float(prop[-1])
                 line = reader.readline()
 
             """Load data"""
             self.data = []  # 2D array
             while line != "":
-                row = list(map(float, line.split(" ")))  # Convert to floats
+                row = list(map(float, line.strip().split(" ")))  # Convert to floats
                 self.data.append(row)
                 line = reader.readline()
 
