@@ -5,11 +5,18 @@
 
 ## Datasets used (from <https://search.earthdata.nasa.gov>)
 
-| Dataset name in `data/datasets` | Dataset name on EarthData              | Use                           |
-|---------------------------------|----------------------------------------|-------------------------------|
-| ndvi                            | ISLSCP_II_GIMMS_NDVI_973               | NDVIs used as fallback        |
-| land_cover                      | ISLSCP_II_MODISLC_968                  | Getting land cover categories |
-| population_density              | CIESIN_SEDAC_GPWv4_APDENS_WPP_2015_R11 | Human - Population Density    |
+| Dataset name in `data/datasets` | Dataset name on EarthData              | Use                                                                                    |
+|---------------------------------|----------------------------------------|----------------------------------------------------------------------------------------|
+| ndvi                            | ISLSCP_II_GIMMS_NDVI_973               | NDVIs used as fallback                                                                 |
+| land_cover                      | ISLSCP_II_MODISLC_968                  | Getting land cover categories                                                          |
+| population_density              | CIESIN_SEDAC_GPWv4_APDENS_WPP_2015_R11 | Human - Population Density                                                             |
+| co2_emissions                   | ISLSCP_CO2_EMISSIONS_1021              | Human - Carbon Dioxide Emissions from Fossil Fuels, Cement, and Gas Flaring as of 1995 |
+| historical_land_use             | ISLSCP_II_HLANDCOVER_967               | Human - Historical Land Use 1700-1900?                                                 |
+| gdp                             | ISLSCP_II_GDP_974                      | Human - Gross Domestic Product as of 1990?                                             |
+| precipitation                   | ISLSCP_CRU5_MONTHLY_MEAN_1015          | Natural - Monthly mean precipitation as of May 1961-90                                 |
+| temperature                     | ISLSCP_CRU5_MONTHLY_MEAN_1015          | Natural - Monthly mean temperature as of May 1961-90                                   |
+| radiation                       | ISLSCP_CRU5_MONTHLY_MEAN_1015          | Natural - Monthly mean radiation as of May 1961-90                                     |
+
 
 ## Notes
 
