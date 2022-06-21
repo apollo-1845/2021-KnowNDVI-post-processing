@@ -66,8 +66,6 @@ def plot_3d(x, y, values, x_label, y_label, z_label):
     fig = plt.figure()
     ax = fig.add_subplot(projection="3d")
 
-    print("x", x)
-    print("y", y)
     ax.contour3D(x, y, values, 50)
 
     ax.set_xlabel(x_label)
@@ -105,16 +103,10 @@ def to_frequencies(values, bins):
         frequencies[tuple(bin_index)] += 1
 
     argmax = np.unravel_index(np.argmax(frequencies, axis=None), frequencies.shape)
-    print("argmax", argmax)
-    print("freq", frequencies[argmax])
-    print("min", min)
-    print("max", max)
-    print("predicted", min + argmax / bins * arr_range)
 
     # return the positions of the buckets and the frequencies
     bucket_points = [np.linspace(min[i], max[i], bin) for i, bin in enumerate(bins)]
-    print("bucket_points", bucket_points)
-    return (np.array(bucket_points), frequencies.T)
+    return (bucket_points, frequencies.T)
 
     # out = []
     # for index, el in np.ndenumerate(frequencies):
