@@ -13,10 +13,14 @@ class Reader(ABC):
 # More information here: https://support.geocue.com/ascii-raster-files-asc/
 class ASCReader(Reader):
     def __init__(self, file: str):
-        """Read from an .ASC file"""
-        with open(file, "r") as reader:
+        """Read from an .ASC file; lazily loaded when needed"""
+        self.file = file
+        self.properties = {}
+        self.data = []  # 2D array
+
+    def load(self):
+        with open(self.file, "r") as reader:
             """Load properties"""
-            self.properties = {}
             line = reader.readline()
             while line[0] not in "-0123456789":
                 # Add property
@@ -24,18 +28,21 @@ class ASCReader(Reader):
                 self.properties[prop[0]] = float(prop[-1])
                 line = reader.readline()
 
-            print("ASC", file, self.properties)
+            print("ASC", self.file, self.properties)
 
             """Load data"""
-            self.data = []  # 2D array
             while line != "":
                 row = list(map(float, line.strip().split(" ")))  # Convert to floats
                 self.data.append(row)
                 line = reader.readline()
 
+    def load_if_needed(self):
+        if(self.properties == {}): self.load()
+
     # Note that there is a corner case where extreme negative latitudes or positive longitudes result in out-of-bounds error.
     # That will not be fixed as it occurs only for exact points on the boundary that are extremely unlikely to occur during ordinary usage
     def get(self, lat_deg: float, lon_deg: float):
+        self.load_if_needed()
         x_coords = int(
             (lon_deg - self.properties["xllcorner"]) // self.properties["cellsize"]
         )

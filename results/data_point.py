@@ -38,10 +38,14 @@ class DataPoint:
         self._id = None
         self._camera_data_raw = None
 
-    def from_timestamp(timestamp, camera_data_raw):
+        self._mean_ndvi = None
+
+    @staticmethod
+    def from_timestamp(timestamp, camera_data_raw, mean_ndvi=None):
         out = DataPoint()
         out._id = int.from_bytes(camera_data_raw, byteorder="big")
         out._camera_data_raw = camera_data_raw
+        out._mean_ndvi = mean_ndvi
 
         out._timestamp = timestamp
 
@@ -126,31 +130,37 @@ class DataPoint:
         """Return img to an array of values where this image is land, using the classifier Convolutional Neural Network inputted"""
         from classifier.predict import Classifier
 
-        # Get classification mask
+        # # Get classification mask
         channels = self.get_camera_data().get_raw_channels()
         classifier = Classifier(channels)
         mask = classifier.predict_image()
+        #
+        # view_img = deepcopy(img)
+        # view_img.contrast()
+        # view_img.display()
 
-        view_img = deepcopy(img)
-        view_img.contrast()
-        view_img.display()
-
-        # Debug - show masked image and ndvi
-        res = classifier.crop_to_tiles(deepcopy(self.get_camera_data().image))
-        res[np.logical_not(mask)] = res[np.logical_not(mask)] // 3
-        view_img = CameraData.from_processed_np_array(res)
-        view_img.display()
-
-        demo_img = classifier.crop_to_tiles(deepcopy(img.image))
-        demo_img[np.logical_not(mask)] = 0
-        view_img = CameraData.from_processed_np_array(demo_img)
-        view_img.contrast()
-        view_img.display()
+        # # Debug - show masked image and ndvi
+        # res = classifier.crop_to_tiles(deepcopy(self.get_camera_data().image))
+        # res[np.logical_not(mask)] = res[np.logical_not(mask)] // 3
+        # view_img = CameraData.from_processed_np_array(res)
+        # view_img.display()
+        #
+        # demo_img = classifier.crop_to_tiles(deepcopy(img.image))
+        # demo_img[np.logical_not(mask)] = 0
+        # view_img = CameraData.from_processed_np_array(demo_img)
+        # view_img.contrast()
+        # view_img.display()
 
         return classifier.crop_to_tiles(img.image)[mask]
 
     def get_ndvi(self):
         return self.get_camera_data().get_ndvi()
+
+    def get_mean_ndvi(self):
+        """Return the mean land ndvi of the datapoint, processed from images on the ISS"""
+        if self._mean_ndvi is None:
+            self._mean_ndvi = np.mean(self.get_land_masked(self.get_ndvi()))
+        return self._mean_ndvi
 
     def get_masked_ndvi_values(self):
         if self._masked_ndvi is None:
@@ -167,6 +177,7 @@ class DataPoint:
             return {
                 "timestamp": self._timestamp.serialise().hex(),
                 "camera_data_raw": self._camera_data_raw.hex(),
+                "ndvi": self._mean_ndvi
             }
 
     def deserialise(serialised):
@@ -175,9 +186,11 @@ class DataPoint:
                 bytes.fromhex(serialised["timestamp"])
             )
             camera_data_raw = serialised["camera_data_raw"]
+            mean_ndvi = serialised["mean_ndvi"] if "mean_ndvi" in serialised else None # Try to get but otherwise return None
             return DataPoint.from_timestamp(
                 timestamp,
                 bytes.fromhex(camera_data_raw),
+                mean_ndvi
             )
         # if no timestamp, don't panic!
         except:
