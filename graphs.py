@@ -9,15 +9,12 @@ from remove_overlapping_pictures import get_spherical_distance
 
 from misc.serialise_data_points import deserialise_from_prompt, deserialise_from_file
 
-data_points = deserialise_from_prompt()
 
+def compare_old_and_new(data_points):
+    # timestamps = [point.get_timestamp().get_raw() for point in data_points]
+    latitudes = [point.get_coordinates()[0] for point in data_points]
+    longitudes = [point.get_coordinates()[1] for point in data_points]
 
-# timestamps = [point.get_timestamp().get_raw() for point in data_points]
-latitudes = [point.get_coordinates()[0] for point in data_points]
-longitudes = [point.get_coordinates()[1] for point in data_points]
-
-
-def compare_old_and_new():
     fig, ax = plt.subplots()  # Create a figure containing a single axes.
 
     data_points_full = deserialise_from_file(f"./intermediates/full_data.json")
@@ -106,7 +103,11 @@ def linear_plot(x, y, x_label, y_label):
     fig.show()
 
 
-def plot_3d(x, y, values, x_label, y_label, z_label):
+def plot_3d(data, labels, rows, bins):
+    ((x, y), values) = to_frequencies(filter_rows(data, rows), bins=bins)
+    x_label = labels[0]
+    y_label = labels[1]
+
     fig, ax = plt.subplots()  # Create a figure containing a single axes.
 
     fig = plt.figure()
@@ -116,7 +117,7 @@ def plot_3d(x, y, values, x_label, y_label, z_label):
 
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
-    ax.set_zlabel(z_label)
+    ax.set_zlabel("Frequency")
 
     # ax.bar3d(x, y, z, dx, dy, dz, zsort="average")
     fig.show()
@@ -173,6 +174,10 @@ def to_frequencies(values, bins):
 
 # compare_old_and_new()
 
+
+data_points = deserialise_from_prompt()
+
+
 expected_ndvi_values = [point.get_expected_ndvi() for point in data_points]
 population_densities = [point.get_population_density() for point in data_points]
 population_densities_scaled = take_log(population_densities)
@@ -214,22 +219,17 @@ labels = [
 
 # overall_hist(data, labels, 0)
 # overall_hist(data, labels, 2)
-overall_hist(data, labels, 3)
+# overall_hist(data, labels, 3)
 # overall_hist(data, labels, 4)
+
 mean_plot(data, labels, 10, 0, 3)
 
-(bucket_points, frequency_data) = to_frequencies(
-    filter_rows(data, [0, 3]), bins=[30, 10]
-)
-
-plot_3d(
-    bucket_points[0],
-    bucket_points[1],
-    frequency_data,
-    labels[0],
-    labels[3],
-    "Frequency",
-)
+# plot_3d(
+#     data,
+#     labels,
+#     [0, 2],
+#     [30, 30],
+# )
 
 # do not close the plots immediately
 input()
