@@ -26,8 +26,8 @@ def compare_old_and_new(data_points):
 
     ax.scatter(longitudes_full, latitudes_full, c="blue", label="Full data from ISS")
     ax.scatter(longitudes, latitudes, c="orange", label="New data")
-    ax.set_xlabel("Longitude")
-    ax.set_ylabel("Latitude")
+    ax.xlabel("Longitude")
+    ax.ylabel("Latitude")
     ax.set_title("Coordinates of taken pictures")
 
     fig.legend(loc="upper left")
@@ -37,14 +37,14 @@ def compare_old_and_new(data_points):
 def overall_hist(values, labels, row_id):
     label = labels[row_id]
     values = filter_rows(values, [row_id]).flatten()
-    fig, ax = plt.subplots()  # Create a figure containing a single axes.
+    # fig, ax = plt.subplots()  # Create a figure containing a single axes.
 
-    ax.hist(values, bins=30)
-    ax.set_ylabel("Number of datapoints")
-    ax.set_xlabel(label)
+    plt.hist(values, bins=30)
+    plt.ylabel("Number of datapoints")
+    plt.xlabel(label)
 
-    fig.legend(loc="upper left")
-    fig.show()
+    # fig.legend(loc="upper left")
+    # fig.show()
 
 
 def mean_plot(values, labels, bins, x_id, y_id):
@@ -81,26 +81,16 @@ def mean_plot(values, labels, bins, x_id, y_id):
 
     print(standard_deviations)
 
-    fig, ax = plt.subplots()  # Create a figure containing a single axes.
-
-    ax.errorbar(midpoints, means, yerr=standard_deviations, ecolor="red")
+    plt.errorbar(midpoints, means, yerr=standard_deviations, ecolor="red")
     # ax.scatter(midpoints, means)
-    ax.set_ylabel(y_label)
-    ax.set_xlabel(x_label)
-
-    fig.legend(loc="upper left")
-    fig.show()
+    plt.ylabel(y_label)
+    plt.xlabel(x_label)
 
 
 def linear_plot(x, y, x_label, y_label):
-    fig, ax = plt.subplots()  # Create a figure containing a single axes.
-
-    ax.scatter(x, y)
-    ax.set_ylabel(y_label)
-    ax.set_xlabel(x_label)
-
-    fig.legend(loc="upper left")
-    fig.show()
+    plt.scatter(x, y)
+    plt.ylabel(y_label)
+    plt.xlabel(x_label)
 
 
 def plot_3d(data, labels, rows, bins):
@@ -108,19 +98,13 @@ def plot_3d(data, labels, rows, bins):
     x_label = labels[0]
     y_label = labels[1]
 
-    fig, ax = plt.subplots()  # Create a figure containing a single axes.
-
-    fig = plt.figure()
-    ax = fig.add_subplot(projection="3d")
+    ax = plt.subplot(projection="3d")
 
     ax.contour3D(x, y, values, 50)
 
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.set_zlabel("Frequency")
-
-    # ax.bar3d(x, y, z, dx, dy, dz, zsort="average")
-    fig.show()
 
 
 def filter_rows(values, axes):
@@ -231,5 +215,4 @@ mean_plot(data, labels, 10, 0, 3)
 #     [30, 30],
 # )
 
-# do not close the plots immediately
-input()
+plt.show()
