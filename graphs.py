@@ -40,7 +40,7 @@ def overall_hist(values, labels, row_id):
     # fig, ax = plt.subplots()  # Create a figure containing a single axes.
 
     plt.hist(values, bins=30)
-    plt.ylabel("Number of datapoints")
+    plt.ylabel("Relative frequency")
     plt.xlabel(label)
 
     # fig.legend(loc="upper left")
@@ -79,15 +79,36 @@ def mean_plot(values, labels, bins, x_id, y_id):
             means.append(np.mean(values))
             standard_deviations.append(np.std(values))
 
-    print(standard_deviations)
+    pmcc = np.corrcoef(x, y)[0, 1]
+    # linear regression
+    # (m, c) = np.linalg.lstsq(x, y, rcond=None)
+    # print(m, c)
 
     plt.errorbar(midpoints, means, yerr=standard_deviations, ecolor="red")
-    # ax.scatter(midpoints, means)
+    plt.text(
+        0.1,
+        0.9,
+        f"r = {pmcc:.2f}",
+        # horizontalalignment="center",
+        # verticalalignment="center",
+        transform=plt.gca().transAxes,
+    )
     plt.ylabel(y_label)
     plt.xlabel(x_label)
 
 
 def linear_plot(x, y, x_label, y_label):
+    pmcc = np.corrcoef(x, y)[0, 1]
+
+    plt.text(
+        0.1,
+        0.9,
+        f"r = {pmcc:.2f}",
+        horizontalalignment="center",
+        verticalalignment="center",
+        transform=plt.gca().transAxes,
+    )
+
     plt.scatter(x, y)
     plt.ylabel(y_label)
     plt.xlabel(x_label)
@@ -164,9 +185,8 @@ data_points = deserialise_from_prompt()
 
 expected_ndvi_values = [point.get_expected_ndvi() for point in data_points]
 population_densities = [point.get_population_density() for point in data_points]
-population_densities_scaled = take_log(population_densities)
 
-co2_emissions = take_log([point.get_co2_emissions() for point in data_points])
+co2_emissions = [point.get_co2_emissions() for point in data_points]
 historical_land_use = [point.get_historical_land_use() for point in data_points]
 gdp = [point.get_gdp() for point in data_points]
 precipitation = [point.get_precipitation() for point in data_points]
@@ -176,12 +196,11 @@ radiation = [point.get_radiation() for point in data_points]
 data = np.array(
     [
         expected_ndvi_values,
-        population_densities,
-        population_densities_scaled,
-        co2_emissions,
+        take_log(population_densities),
+        take_log(co2_emissions),
         historical_land_use,
-        gdp,
-        precipitation,
+        take_log(gdp),
+        take_log(precipitation),
         temperature,
         radiation,
     ],
@@ -190,28 +209,34 @@ data = np.array(
 
 labels = [
     "Dataset NDVI value",  # 0
-    "Population density",  # 1
-    "ln(population density)",  # 2
-    "ln(CO2 emissions)",  # 3
-    "Historical land use",  # 4
-    "GDP",  # 5
-    "Precipitation",  # 6
-    "Temperature",  # 7
-    "Radiation",  # 8
+    "ln(population density)",  # 1
+    "ln(CO2 emissions)",  # 2
+    "Historical land use",  # 3
+    "ln(GDP)",  # 4
+    "ln(Precipitation)",  # 5
+    "Temperature",  # 6
+    "Radiation",  # 7
 ]
 
 
 # overall_hist(data, labels, 0)
+# overall_hist(data, labels, 1)
 # overall_hist(data, labels, 2)
 # overall_hist(data, labels, 3)
-# overall_hist(data, labels, 4)
 
-mean_plot(data, labels, 10, 0, 3)
+for i in range(1, len(data)):
+    plt.subplot(3, 3, i)
+    mean_plot(data, labels, 10, 0, i)
 
+plt.figure()
+
+for i in range(0, len(data)):
+    plt.subplot(3, 3, i + 1)
+    overall_hist(data, labels, i)
 # plot_3d(
 #     data,
 #     labels,
-#     [0, 2],
+#     [0, 1],
 #     [30, 30],
 # )
 
