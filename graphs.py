@@ -37,13 +37,59 @@ def compare_old_and_new():
     fig.show()
 
 
-def overall_hist(values, row_id, label):
+def overall_hist(values, labels, row_id):
+    label = labels[row_id]
     values = filter_rows(values, [row_id]).flatten()
     fig, ax = plt.subplots()  # Create a figure containing a single axes.
 
     ax.hist(values, bins=30)
     ax.set_ylabel("Number of datapoints")
     ax.set_xlabel(label)
+
+    fig.legend(loc="upper left")
+    fig.show()
+
+
+def mean_plot(values, labels, bins, x_id, y_id):
+    x_label = labels[x_id]
+    y_label = labels[y_id]
+    (x, y) = filter_rows(values, [x_id, y_id])
+    min = np.min(x)
+    max = np.max(x)
+
+    arr_range = max - min
+
+    bin_indices = np.digitize(
+        x,
+        np.linspace(
+            min,
+            # to avoid including the max
+            max + np.abs(max) * (10 ** -6),
+            bins + 1,
+        ),
+    )
+    # move from (1 to n) to (0 to n - 1)
+    bin_indices -= 1
+
+    means = []
+    standard_deviations = []
+    midpoints = []
+    for bin_index in range(bins):
+        values = y[bin_indices == bin_index]
+        if values.size != 0:
+            midpoint = min + (bin_index + 0.5) / bins * arr_range
+            midpoints.append(midpoint)
+            means.append(np.mean(values))
+            standard_deviations.append(np.std(values))
+
+    print(standard_deviations)
+
+    fig, ax = plt.subplots()  # Create a figure containing a single axes.
+
+    ax.errorbar(midpoints, means, yerr=standard_deviations, ecolor="red")
+    # ax.scatter(midpoints, means)
+    ax.set_ylabel(y_label)
+    ax.set_xlabel(x_label)
 
     fig.legend(loc="upper left")
     fig.show()
@@ -83,6 +129,16 @@ def filter_rows(values, axes):
     return out[:, mask]
 
 
+def take_log(vals):
+    out = []
+    for val in vals:
+        if val is None or val == 0:
+            out.append(None)
+        else:
+            out.append(np.log(val))
+    return out
+
+
 def to_frequencies(values, bins):
     assert len(bins) == values.shape[0]
 
@@ -117,37 +173,61 @@ def to_frequencies(values, bins):
 
 # compare_old_and_new()
 
-expected_ndvi_values_label = "Dataset NDVI value"
-pop_density_label = "Population density"
-pop_density_scaled_label = "ln(population density)"
-
 expected_ndvi_values = [point.get_expected_ndvi() for point in data_points]
 population_densities = [point.get_population_density() for point in data_points]
-population_densities_scaled = []
-for pop in population_densities:
-    if pop is None or pop == 0:
-        population_densities_scaled.append(None)
-    else:
-        population_densities_scaled.append(np.log(pop))
+population_densities_scaled = take_log(population_densities)
+
+co2_emissions = take_log([point.get_co2_emissions() for point in data_points])
+historical_land_use = [point.get_historical_land_use() for point in data_points]
+gdp = [point.get_gdp() for point in data_points]
+precipitation = [point.get_precipitation() for point in data_points]
+temperature = [point.get_temperature() for point in data_points]
+radiation = [point.get_radiation() for point in data_points]
 
 data = np.array(
-    [expected_ndvi_values, population_densities, population_densities_scaled],
+    [
+        expected_ndvi_values,
+        population_densities,
+        population_densities_scaled,
+        co2_emissions,
+        historical_land_use,
+        gdp,
+        precipitation,
+        temperature,
+        radiation,
+    ],
     dtype=float,
 )
 
-overall_hist(data, 0, expected_ndvi_values_label)
-overall_hist(data, 2, pop_density_scaled_label)
+labels = [
+    "Dataset NDVI value",  # 0
+    "Population density",  # 1
+    "ln(population density)",  # 2
+    "ln(CO2 emissions)",  # 3
+    "Historical land use",  # 4
+    "GDP",  # 5
+    "Precipitation",  # 6
+    "Temperature",  # 7
+    "Radiation",  # 8
+]
+
+
+# overall_hist(data, labels, 0)
+# overall_hist(data, labels, 2)
+overall_hist(data, labels, 3)
+# overall_hist(data, labels, 4)
+mean_plot(data, labels, 10, 0, 3)
 
 (bucket_points, frequency_data) = to_frequencies(
-    filter_rows(data, [0, 2]), bins=[30, 10]
+    filter_rows(data, [0, 3]), bins=[30, 10]
 )
 
 plot_3d(
     bucket_points[0],
     bucket_points[1],
     frequency_data,
-    expected_ndvi_values_label,
-    pop_density_scaled_label,
+    labels[0],
+    labels[3],
     "Frequency",
 )
 

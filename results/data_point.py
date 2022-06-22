@@ -4,7 +4,6 @@ from copy import deepcopy
 import cv2
 import numpy as np
 
-from classifier.predict import Classifier
 from misc.dataset_reader import ASCReader
 from results.camera_data import CameraData
 from results.timestamp_data import TimeStampData
@@ -12,7 +11,9 @@ from results.timestamp_data import TimeStampData
 # A helpful site for debugging: https://www.findlatitudeandlongitude.com/
 """Datasets"""
 expected_ndvi = ASCReader("data/datasets/ndvi.asc")
-land_cover = ASCReader("data/datasets/land_cover.asc")  # Legend: https://www.researchgate.net/profile/Annemarie_Schneider/publication/261707258/figure/download/fig3/AS:296638036889602@1447735427158/Early-result-from-MODIS-showing-the-global-map-of-land-cover-based-on-the-IGBP.png
+land_cover = ASCReader(
+    "data/datasets/land_cover.asc"
+)  # Legend: https://www.researchgate.net/profile/Annemarie_Schneider/publication/261707258/figure/download/fig3/AS:296638036889602@1447735427158/Early-result-from-MODIS-showing-the-global-map-of-land-cover-based-on-the-IGBP.png
 
 population_density = ASCReader("data/datasets/population_density.asc")
 co2_emissions = ASCReader("data/datasets/co2_emissions.asc")
@@ -77,11 +78,17 @@ class DataPoint:
         return self._coordinates
 
     """Datasets"""
+
     def get_expected_ndvi(self):
         loc = self.get_coordinates()
         res = expected_ndvi.get(loc[0], loc[1])
-        if (res is None) or (res > 1 or res < -1): return None # Not possible
+        if (res is None) or (res > 1 or res < -1):
+            return None  # Not possible
         return res
+
+    def get_latitude(self):
+        loc = self.get_coordinates()
+        return loc[0]
 
     def get_land_cover(self):
         loc = self.get_coordinates()
@@ -117,6 +124,8 @@ class DataPoint:
 
     def get_land_masked(self, img: CameraData) -> np.array:
         """Return img to an array of values where this image is land, using the classifier Convolutional Neural Network inputted"""
+        from classifier.predict import Classifier
+
         # Get classification mask
         channels = self.get_camera_data().get_raw_channels()
         classifier = Classifier(channels)
