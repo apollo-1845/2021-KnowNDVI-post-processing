@@ -47,7 +47,10 @@ def overall_hist(values, labels, row_id):
     # fig.show()
 
 
-def mean_plot(values, labels, bins, x_id, y_id):
+def mean_plot(values, labels, bins, x_id, y_id, label_on_right=False):
+    from sklearn.linear_model import LinearRegression
+    from sklearn.preprocessing import PolynomialFeatures
+
     x_label = labels[x_id]
     y_label = labels[y_id]
     (x, y) = filter_rows(values, [x_id, y_id])
@@ -79,14 +82,44 @@ def mean_plot(values, labels, bins, x_id, y_id):
             means.append(np.mean(values))
             standard_deviations.append(np.std(values))
 
-    pmcc = np.corrcoef(x, y)[0, 1]
-    # linear regression
-    # (m, c) = np.linalg.lstsq(x, y, rcond=None)
-    # print(m, c)
+    plt.errorbar(midpoints, means, yerr=standard_deviations, c="blue", ecolor="silver")
 
-    plt.errorbar(midpoints, means, yerr=standard_deviations, ecolor="red")
+    # linear regression
+    x_reshaped = x.reshape((-1, 1))
+    model = LinearRegression().fit(x_reshaped, y)
+    coef = model.coef_
+    intercept = model.intercept_
+
+    x_regression = np.linspace(min, max, bins)
+    y_regression = coef * x_regression + intercept
+    plt.plot(x_regression, y_regression, c="green")
+
+    # polynomial regression
+    degree = 2
+    # get the different degrees
+    x_transformed = PolynomialFeatures(degree=degree, include_bias=False).fit_transform(
+        x_reshaped
+    )
+    model = LinearRegression().fit(x_transformed, y)
+    coef = model.coef_
+    intercept = model.intercept_
+
+    # substitute into the calculation
+    x_regression_transformed = PolynomialFeatures(
+        degree=degree, include_bias=False
+    ).fit_transform(x_regression.reshape((-1, 1)))
+    y_regression = np.sum(x_regression_transformed * coef, axis=1) + intercept
+
+    plt.plot(x_regression, y_regression, c="orange")
+
+    pmcc = np.corrcoef(x, y)[0, 1]
+    print(f"Label: {x_label}, r={pmcc}, n={x.size}")
+    if label_on_right:
+        label_x = 0.7
+    else:
+        label_x = 0.1
     plt.text(
-        0.1,
+        label_x,
         0.9,
         f"r = {pmcc:.2f}",
         # horizontalalignment="center",
@@ -116,10 +149,10 @@ def linear_plot(x, y, x_label, y_label):
 
 def plot_3d(data, labels, rows, bins):
     ((x, y), values) = to_frequencies(filter_rows(data, rows), bins=bins)
-    x_label = labels[0]
-    y_label = labels[1]
+    x_label = labels[rows[0]]
+    y_label = labels[rows[1]]
 
-    ax = plt.subplot(projection="3d")
+    ax = plt.gca()
 
     ax.contour3D(x, y, values, 50)
 
@@ -185,7 +218,7 @@ data_points = deserialise_from_prompt()
 
 expected_ndvi_values = [point.get_expected_ndvi() for point in data_points]
 population_densities = [point.get_population_density() for point in data_points]
-
+latitudes = [point.get_latitude() for point in data_points]
 co2_emissions = [point.get_co2_emissions() for point in data_points]
 historical_land_use = [point.get_historical_land_use() for point in data_points]
 gdp = [point.get_gdp() for point in data_points]
@@ -197,12 +230,13 @@ data = np.array(
     [
         expected_ndvi_values,
         take_log(population_densities),
+        latitudes,
         take_log(co2_emissions),
-        historical_land_use,
         take_log(gdp),
         take_log(precipitation),
         temperature,
         radiation,
+        # historical_land_use,
     ],
     dtype=float,
 )
@@ -210,34 +244,45 @@ data = np.array(
 labels = [
     "Dataset NDVI value",  # 0
     "ln(population density)",  # 1
-    "ln(CO2 emissions)",  # 2
-    "Historical land use",  # 3
+    "latitude",  # 2
+    "ln(CO2 emissions)",  # 3
     "ln(GDP)",  # 4
     "ln(Precipitation)",  # 5
     "Temperature",  # 6
     "Radiation",  # 7
+    # "Historical land use",  # 8
 ]
-
-
-# overall_hist(data, labels, 0)
-# overall_hist(data, labels, 1)
-# overall_hist(data, labels, 2)
-# overall_hist(data, labels, 3)
-
-for i in range(1, len(data)):
-    plt.subplot(3, 3, i)
-    mean_plot(data, labels, 10, 0, i)
-
-plt.figure()
 
 for i in range(0, len(data)):
     plt.subplot(3, 3, i + 1)
     overall_hist(data, labels, i)
-# plot_3d(
-#     data,
-#     labels,
-#     [0, 1],
-#     [30, 30],
-# )
+
+fig = plt.figure()
+
+for i in range(1, len(data)):
+    plt.subplot(3, 3, i)
+    mean_plot(data, labels, 20, i, 0, label_on_right=(labels[i] == "Radiation"))
+
+fig.legend(
+    [
+        "Linear regression line",
+        "Polynomial regression line",
+        "Mean dependent variable",
+    ],
+    loc="upper center",
+    bbox_to_anchor=(0, 0.0, 1, 0.3),
+)
+
+# plt.figure()
+
+# for i in range(1, len(data)):
+#     plt.subplot(3, 3, i, projection="3d")
+
+#     plot_3d(
+#         data,
+#         labels,
+#         [i, 0],
+#         [30, 30],
+#     )
 
 plt.show()
