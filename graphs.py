@@ -15,8 +15,6 @@ def compare_old_and_new(data_points):
     latitudes = [point.get_coordinates()[0] for point in data_points]
     longitudes = [point.get_coordinates()[1] for point in data_points]
 
-    fig, ax = plt.subplots()  # Create a figure containing a single axes.
-
     data_points_full = deserialise_from_file(f"./intermediates/full_data.json")
     data_points_full = [point for point in data_points_full]
 
@@ -24,14 +22,21 @@ def compare_old_and_new(data_points):
     latitudes_full = [point.get_coordinates()[0] for point in data_points_full]
     longitudes_full = [point.get_coordinates()[1] for point in data_points_full]
 
-    ax.scatter(longitudes_full, latitudes_full, c="blue", label="Full data from ISS")
-    ax.scatter(longitudes, latitudes, c="orange", label="New data")
-    ax.xlabel("Longitude")
-    ax.ylabel("Latitude")
-    ax.set_title("Coordinates of taken pictures")
+    # Show the picture of the Earth
+    plt.imshow(plt.imread("data/other/world_map.png"), extent=[-180, 180, -90, 90])
 
-    fig.legend(loc="upper left")
-    fig.show()
+    plt.scatter(
+        longitudes_full, latitudes_full, c="blue", label="Data received from the ISS"
+    )
+    plt.scatter(
+        longitudes,
+        latitudes,
+        c="orange",
+        label="Pictures of land received from the ISS",
+    )
+    plt.xlabel("Longitude")
+    plt.ylabel("Latitude")
+    plt.legend()
 
 
 def overall_hist(values, labels, row_id):
@@ -210,71 +215,69 @@ def to_frequencies(values, bins):
     # return np.array(out).T
 
 
-# compare_old_and_new()
-
-
 data_points = deserialise_from_prompt()
 
 
-expected_ndvi_values = [point.get_expected_ndvi() for point in data_points]
-population_densities = [point.get_population_density() for point in data_points]
-latitudes = [point.get_latitude() for point in data_points]
-co2_emissions = [point.get_co2_emissions() for point in data_points]
-historical_land_use = [point.get_historical_land_use() for point in data_points]
-gdp = [point.get_gdp() for point in data_points]
-precipitation = [point.get_precipitation() for point in data_points]
-temperature = [point.get_temperature() for point in data_points]
-radiation = [point.get_radiation() for point in data_points]
+# expected_ndvi_values = [point.get_expected_ndvi() for point in data_points]
+# population_densities = [point.get_population_density() for point in data_points]
+# latitudes = [point.get_latitude() for point in data_points]
+# co2_emissions = [point.get_co2_emissions() for point in data_points]
+# historical_land_use = [point.get_historical_land_use() for point in data_points]
+# gdp = [point.get_gdp() for point in data_points]
+# precipitation = [point.get_precipitation() for point in data_points]
+# temperature = [point.get_temperature() for point in data_points]
+# radiation = [point.get_radiation() for point in data_points]
 
-data = np.array(
-    [
-        expected_ndvi_values,
-        take_log(population_densities),
-        latitudes,
-        take_log(co2_emissions),
-        take_log(gdp),
-        take_log(precipitation),
-        temperature,
-        radiation,
-        # historical_land_use,
-    ],
-    dtype=float,
-)
+# data = np.array(
+#     [
+#         expected_ndvi_values,
+#         take_log(population_densities),
+#         latitudes,
+#         take_log(co2_emissions),
+#         take_log(gdp),
+#         take_log(precipitation),
+#         temperature,
+#         radiation,
+#         # historical_land_use,
+#     ],
+#     dtype=float,
+# )
 
-labels = [
-    "Dataset NDVI value",  # 0
-    "ln(population density)",  # 1
-    "latitude",  # 2
-    "ln(CO2 emissions)",  # 3
-    "ln(GDP)",  # 4
-    "ln(Precipitation)",  # 5
-    "Temperature",  # 6
-    "Radiation",  # 7
-    # "Historical land use",  # 8
-]
+# labels = [
+#     "Dataset NDVI value",  # 0
+#     "ln(population density)",  # 1
+#     "latitude",  # 2
+#     "ln(CO2 emissions)",  # 3
+#     "ln(GDP)",  # 4
+#     "ln(Precipitation)",  # 5
+#     "Temperature",  # 6
+#     "Radiation",  # 7
+#     # "Historical land use",  # 8
+# ]
 
-for i in range(0, len(data)):
-    plt.subplot(3, 3, i + 1)
-    overall_hist(data, labels, i)
+# # Histograms of each datapoint
+# for i in range(0, len(data)):
+#     plt.subplot(3, 3, i + 1)
+#     overall_hist(data, labels, i)
 
-fig = plt.figure()
+# # plots of means and standard deviations
+# fig = plt.figure()
+# for i in range(1, len(data)):
+#     plt.subplot(3, 3, i)
+#     mean_plot(data, labels, 20, i, 0, label_on_right=(labels[i] == "Radiation"))
 
-for i in range(1, len(data)):
-    plt.subplot(3, 3, i)
-    mean_plot(data, labels, 20, i, 0, label_on_right=(labels[i] == "Radiation"))
+# fig.legend(
+#     [
+#         "Linear regression line",
+#         "Polynomial regression line",
+#         "Mean dependent variable",
+#     ],
+#     loc="upper center",
+#     bbox_to_anchor=(0, 0.0, 1, 0.3),
+# )
 
-fig.legend(
-    [
-        "Linear regression line",
-        "Polynomial regression line",
-        "Mean dependent variable",
-    ],
-    loc="upper center",
-    bbox_to_anchor=(0, 0.0, 1, 0.3),
-)
-
+# # pairwise histograms
 # plt.figure()
-
 # for i in range(1, len(data)):
 #     plt.subplot(3, 3, i, projection="3d")
 
@@ -284,5 +287,9 @@ fig.legend(
 #         [i, 0],
 #         [30, 30],
 #     )
+
+# path of the ISS
+plt.figure()
+compare_old_and_new(data_points)
 
 plt.show()
