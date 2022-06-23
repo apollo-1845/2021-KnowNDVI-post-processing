@@ -160,14 +160,12 @@ def to_frequencies(values, bins):
 
 data_points = deserialise_from_prompt()
 
-data_points = data_points[:20]
+data_points = data_points
 
-recorded_ndvi = [point.get_mean_ndvi() for point in data_points]
+recorded_ndvi = [point.get_avg_ndvi() for point in data_points]
 expected_ndvi_values = [point.get_expected_ndvi() for point in data_points]
 population_densities = [point.get_population_density() for point in data_points]
 population_densities_scaled = take_log(population_densities)
-
-linear_plot(expected_ndvi_values, recorded_ndvi, "Expected NDVI", "Recorded NDVI")
 
 co2_emissions = take_log([point.get_co2_emissions() for point in data_points])
 historical_land_use = [point.get_historical_land_use() for point in data_points]
@@ -209,7 +207,9 @@ labels = [
 # overall_hist(data, labels, 3)
 # overall_hist(data, labels, 4)
 
-mean_plot(data, labels, 10, 0, 3)
+linear_plot(expected_ndvi_values, recorded_ndvi, "Expected NDVI", "Recorded NDVI")
+
+# mean_plot(data, labels, 10, 0, 3)
 
 # plot_3d(
 #     data,

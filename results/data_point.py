@@ -1,14 +1,20 @@
 #!/usr/bin/env python
+import math
+import urllib
 from copy import deepcopy
 
 import cv2
 import numpy as np
+import requests
+import urllib3
 
 from misc.dataset_reader import ASCReader
 from results.camera_data import CameraData
 from results.timestamp_data import TimeStampData
 
 # A helpful site for debugging: https://www.findlatitudeandlongitude.com/
+from settings import GGLMAPS_KEY
+
 """Datasets"""
 expected_ndvi = ASCReader("data/datasets/ndvi.asc")
 land_cover = ASCReader(
@@ -38,14 +44,14 @@ class DataPoint:
         self._id = None
         self._camera_data_raw = None
 
-        self._mean_ndvi = None
+        self._avg_ndvi = None
 
     @staticmethod
-    def from_timestamp(timestamp, camera_data_raw, mean_ndvi=None):
+    def from_timestamp(timestamp, camera_data_raw, avg_ndvi=None):
         out = DataPoint()
         out._id = int.from_bytes(camera_data_raw, byteorder="big")
         out._camera_data_raw = camera_data_raw
-        out._mean_ndvi = mean_ndvi
+        out._avg_ndvi = avg_ndvi
 
         out._timestamp = timestamp
 
@@ -126,41 +132,71 @@ class DataPoint:
         loc = self.get_coordinates()
         return radiation.get(loc[0], loc[1])
 
-    def get_land_masked(self, img: CameraData) -> np.array:
+    def get_land_masked(self, to_mask: CameraData) -> np.array:
         """Return img to an array of values where this image is land, using the classifier Convolutional Neural Network inputted"""
-        from classifier.predict import Classifier
-
-        # # Get classification mask
-        channels = self.get_camera_data().get_raw_channels()
-        classifier = Classifier(channels)
-        mask = classifier.predict_image()
         #
-        # view_img = deepcopy(img)
-        # view_img.contrast()
-        # view_img.display()
-
-        # # Debug - show masked image and ndvi
+        # # Get classification mask
+        # channels = self.get_camera_data().get_raw_channels()
+        # classifier = Classifier(channels)
+        # mask = classifier.predict_image()
+        # #
+        # # view_img = deepcopy(img)
+        # # view_img.contrast()
+        # # view_img.display()
+        #
+        # # # Debug - show masked image and ndvi
         # res = classifier.crop_to_tiles(deepcopy(self.get_camera_data().image))
         # res[np.logical_not(mask)] = res[np.logical_not(mask)] // 3
         # view_img = CameraData.from_processed_np_array(res)
         # view_img.display()
-        #
-        # demo_img = classifier.crop_to_tiles(deepcopy(img.image))
-        # demo_img[np.logical_not(mask)] = 0
-        # view_img = CameraData.from_processed_np_array(demo_img)
-        # view_img.contrast()
-        # view_img.display()
+        # #
+        # # demo_img = classifier.crop_to_tiles(deepcopy(img.image))
+        # # demo_img[np.logical_not(mask)] = 0
+        # # view_img = CameraData.from_processed_np_array(demo_img)
+        # # view_img.contrast()
+        # # view_img.display()
 
-        return classifier.crop_to_tiles(img.image)[mask]
+        # Get land mask - create URL for API
+        long, lat = self.get_coordinates()
+        width, height, _ = self.get_camera_data().image.shape
+        scale_factor = max(width, height) / 640 # Won't display larger than 640x640 - mask size x sf = image size
+
+        land_mask_url = f"https://maps.googleapis.com/maps/api/staticmap?center={long}," \
+                        f"{lat}&zoom=7&format=png&size={height//scale_factor}x{width//scale_factor}&maptype=roadmap&style" \
+                        f"=feature:administrative|visibility:off&style=feature:landscape|color:0x000000&style=feature" \
+                        f":water|color:0xffffff&style=feature:road|visibility:off&style=feature:transit|visibility" \
+                        f":off&style=feature:poi|visibility:off&key={GGLMAPS_KEY}"
+
+        req = requests.get(land_mask_url, stream=True)
+
+        print(land_mask_url)
+        land_mask = np.asarray(bytearray(req.content), dtype=np.uint8) # Is sea
+        land_mask = cv2.imdecode(land_mask, cv2.IMREAD_UNCHANGED)
+
+        land_mask = cv2.resize(land_mask, (height, width))
+        print(land_mask.shape)
+
+        # img = self.get_camera_data()
+
+        # cloud_mask = img.mask_lighter_total(310) # Cloud
+        # print(np.sum(cloud_mask))
+
+        mask = land_mask
+
+        view_img = deepcopy(self.get_camera_data())
+        view_img.image[land_mask] = 0
+        view_img.display()
+
+        return to_mask.image[mask]
 
     def get_ndvi(self):
         return self.get_camera_data().get_ndvi()
 
-    def get_mean_ndvi(self):
+    def get_avg_ndvi(self):
         """Return the mean land ndvi of the datapoint, processed from images on the ISS"""
-        if self._mean_ndvi is None:
-            self._mean_ndvi = np.mean(self.get_land_masked(self.get_ndvi()))
-        return self._mean_ndvi
+        if self._avg_ndvi is None:
+            self._avg_ndvi = np.median(self.get_land_masked(self.get_ndvi()))
+        return self._avg_ndvi
 
     def get_masked_ndvi_values(self):
         if self._masked_ndvi is None:
@@ -177,7 +213,7 @@ class DataPoint:
             return {
                 "timestamp": self._timestamp.serialise().hex(),
                 "camera_data_raw": self._camera_data_raw.hex(),
-                "ndvi": self._mean_ndvi
+                "ndvi": self._avg_ndvi
             }
 
     def deserialise(serialised):
@@ -186,11 +222,11 @@ class DataPoint:
                 bytes.fromhex(serialised["timestamp"])
             )
             camera_data_raw = serialised["camera_data_raw"]
-            mean_ndvi = serialised["mean_ndvi"] if "mean_ndvi" in serialised else None # Try to get but otherwise return None
+            avg_ndvi = serialised["ndvi"] if "ndvi" in serialised else None # Try to get but otherwise return None
             return DataPoint.from_timestamp(
                 timestamp,
                 bytes.fromhex(camera_data_raw),
-                mean_ndvi
+                avg_ndvi
             )
         # if no timestamp, don't panic!
         except:

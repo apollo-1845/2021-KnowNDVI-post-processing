@@ -117,8 +117,9 @@ class Classifier:
         print(MODEL)
 
 
-        if crops == []:
+        if len(crops) == 0:
             prediction = []
+            print("NOTHING TO PREDICT")
         else:
             prediction = MODEL.predict(crops)
 
