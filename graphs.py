@@ -84,6 +84,9 @@ def mean_plot(values, labels, bins, x_id, y_id, label_on_right=False):
     y_regression = coef * x_regression + intercept
     plt.plot(x_regression, y_regression, c="green")
 
+    pmcc = np.corrcoef(x, y)[0, 1]
+    print(f"Label: {x_label}, r={pmcc}, n={x.size}, m={model.coef_}")
+
     # polynomial regression
     degree = 2
     # get the different degrees
@@ -101,9 +104,6 @@ def mean_plot(values, labels, bins, x_id, y_id, label_on_right=False):
     y_regression = np.sum(x_regression_transformed * coef, axis=1) + intercept
 
     plt.plot(x_regression, y_regression, c="orange")
-
-    pmcc = np.corrcoef(x, y)[0, 1]
-    print(f"Label: {x_label}, r={pmcc}, n={x.size}")
     if label_on_right:
         label_x = 0.7
     else:
@@ -227,6 +227,17 @@ data = np.array(
     dtype=float,
 )
 
+# data = np.array(
+#     [
+#         population_densities,
+#         co2_emissions,
+#         gdp,
+#         precipitation,
+#         # historical_land_use,
+#     ],
+#     dtype=float,
+# )
+
 labels = [
     "Dataset NDVI value",  # 0
     "ln(population density)",  # 1
@@ -238,6 +249,14 @@ labels = [
     "Radiation",  # 7
     # "Historical land use",  # 8
 ]
+
+# labels = [
+#     "population density",  # 1
+#     "CO2 emissions",  # 3
+#     "GDP",  # 4
+#     "Precipitation",  # 5
+#     # "Historical land use",  # 8
+# ]
 
 # process parts of NDVI data
 data_left = data[:, data[0, ...] < 0.48]
@@ -259,8 +278,11 @@ for i in range(0, len(data)):
 
 # # plots of means and standard deviations
 # fig = plt.figure()
+# # fig.suptitle("Effect of various variables on NDVI on plants with higher NDVI values")
+# fig.suptitle("Effect of various variables on NDVI of plants")
 # for i in range(1, len(data)):
 #     plt.subplot(3, 3, i)
+#     # mean_plot(data_right, labels, 20, i, 0, label_on_right=(labels[i] == "Radiation"))
 #     mean_plot(data, labels, 20, i, 0, label_on_right=(labels[i] == "Radiation"))
 
 # fig.legend(
