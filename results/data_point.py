@@ -33,6 +33,12 @@ radiation = ASCReader("data/datasets/radiation.asc")
 artificial_data_point_id = 0
 
 
+def remove_none_or_negative(val):
+    if val is None or val < 0:
+        return None
+    return val
+
+
 class DataPoint:
     """A class representing a collection of available data for a certain timestamp and position"""
 
@@ -106,11 +112,11 @@ class DataPoint:
 
     def get_population_density(self):
         loc = self.get_coordinates()
-        return population_density.get(loc[0], loc[1])
+        return remove_none_or_negative(population_density.get(loc[0], loc[1]))
 
     def get_co2_emissions(self):
         loc = self.get_coordinates()
-        return co2_emissions.get(loc[0], loc[1])
+        return remove_none_or_negative(co2_emissions.get(loc[0], loc[1]))
 
     def get_historical_land_use(self):
         loc = self.get_coordinates()
@@ -118,11 +124,11 @@ class DataPoint:
 
     def get_gdp(self):
         loc = self.get_coordinates()
-        return gdp.get(loc[0], loc[1])
+        return remove_none_or_negative(gdp.get(loc[0], loc[1]))
 
     def get_precipitation(self):
         loc = self.get_coordinates()
-        return precipitation.get(loc[0], loc[1])
+        return remove_none_or_negative(precipitation.get(loc[0], loc[1]))
 
     def get_temperature(self):
         loc = self.get_coordinates()
@@ -130,7 +136,7 @@ class DataPoint:
 
     def get_radiation(self):
         loc = self.get_coordinates()
-        return radiation.get(loc[0], loc[1])
+        return remove_none_or_negative(radiation.get(loc[0], loc[1]))
 
     def get_land_masked(self, to_mask: CameraData) -> np.array:
         """Return img to an array of values where this image is land, using the classifier Convolutional Neural Network inputted"""
