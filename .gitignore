@@ -139,3 +139,6 @@ dmypy.json
 
 # IDE
 .idea/
+
+# API Keys
+data/private/

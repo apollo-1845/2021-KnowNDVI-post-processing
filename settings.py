@@ -22,3 +22,11 @@ ISS_TLE_2 = "2 25544  51.6431 189.5223 0006686  66.4371  32.9954 15.499372733385
 CLASSIFIER_CROP_SIZE = 9  # 9px x 9px inputted
 CLASSIFIER_TILE_SIZE = 5  # 5px x 5px squares on mask result - increase to speed up
 CLASSIFIER_CERTAINTY_THRESHOLD = 0.5  # If more certain than this, land
+
+# Land masking
+# Add key from environment vars if possible, else prompt
+if os.path.exists("data/private/gglmaps_key.txt"):
+    with open("data/private/gglmaps_key.txt") as reader:
+        GGLMAPS_KEY = reader.read()
+else:
+    GGLMAPS_KEY = input("Google Maps API Key:")

@@ -3,10 +3,10 @@ import time
 
 from debug_funcs import get_datapoints
 
-import tensorflow as tf
+# import tensorflow as tf
 import numpy as np
 
-print("TF Version", tf.__version__)
+# print("TF Version", tf.__version__)
 
 # def get_dp_by_longitude(long:int) -> DataPoint:
 #     # Get dp
@@ -21,6 +21,7 @@ def run_test():
     for i, datapoint in get_datapoints(670, 700, 10):
         if datapoint.get_land_cover() != 0:  # Only on land
             print("Image", i)
+            print(datapoint.get_coordinates())
             start = time.time()
             ndvi = datapoint.get_land_masked(datapoint.get_ndvi())
             end = time.time()

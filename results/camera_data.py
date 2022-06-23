@@ -190,7 +190,7 @@ class CameraData(Data):
         return self.ndvi
 
     def mask_lighter_total(self, threshold: int):
-        """Mask total NIR + VIS larger than threshold (up to 510)"""
+        """Return the mask of total NIR + VIS larger than threshold (up to 510)"""
         # Masking - total is the total of red and blue channels
         nir, vis = cv2.split(self.image)
         nir = nir.astype("float")  # NaN is a float
@@ -198,12 +198,10 @@ class CameraData(Data):
         total = nir + vis
 
         mask = total > threshold
-        nir[mask] = np.nan
-        vis[mask] = np.nan
-        self.image = cv2.merge([nir, vis])
+        return mask
 
     def mask_darker_total(self, threshold: int):
-        """Mask total NIR + VIS smaller than threshold (up to 510)"""
+        """Return the mask of total NIR + VIS smaller than threshold (up to 510)"""
         # Masking - total is the total of red and blue channels
         nir, vis = cv2.split(self.image)
         nir = nir.astype("float")  # NaN is a float
@@ -211,22 +209,20 @@ class CameraData(Data):
         total = nir + vis
 
         mask = total < threshold
-        nir[mask] = np.nan
-        vis[mask] = np.nan
-        self.image = cv2.merge([nir, vis])
+        return mask
 
-    def mask_sea(self, threshold: float):
-        """Mask where NIR^2:VIS > threshold"""
-        # Masking - total is the total of red and blue channels
-        nir, vis = cv2.split(self.image)
-        nir = nir.astype("float")  # NaN is a float
-        vis = vis.astype("float")
-
-        vis[vis == 0] = 0.0001
-        mask = (nir ** 2 / vis) > threshold
-        nir[mask] = np.nan
-        vis[mask] = np.nan
-        self.image = cv2.merge([nir, vis])
+    # def mask_sea(self, threshold: float):
+    #     """Mask where NIR^2:VIS > threshold"""
+    #     # Masking - total is the total of red and blue channels
+    #     nir, vis = cv2.split(self.image)
+    #     nir = nir.astype("float")  # NaN is a float
+    #     vis = vis.astype("float")
+    #
+    #     vis[vis == 0] = 0.0001
+    #     mask = (nir ** 2 / vis) > threshold
+    #     nir[mask] = np.nan
+    #     vis[mask] = np.nan
+    #     self.image = cv2.merge([nir, vis])
 
     def get_unusable_area(self):
         nan_counts = np.count_nonzero(np.isnan(self.image))

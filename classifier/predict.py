@@ -116,7 +116,12 @@ class Classifier:
             load_model()
         print(MODEL)
 
-        prediction = MODEL.predict(crops)
+
+        if len(crops) == 0:
+            prediction = []
+            print("NOTHING TO PREDICT")
+        else:
+            prediction = MODEL.predict(crops)
 
         # Add cover - 0 certainty at camera cover
         shaped_prediction = np.zeros(len(where_useful))
