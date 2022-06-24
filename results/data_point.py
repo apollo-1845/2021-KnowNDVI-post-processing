@@ -142,7 +142,7 @@ class DataPoint:
 
     def get_land_masked(self, to_mask: CameraData) -> np.array:
         """Return img to an array of values where this image is land, using the classifier Convolutional Neural Network inputted"""
-        #
+        # This is from when we used a CNN, but we are now using manual land masking as this is more accurate.
         # # Get classification mask
         # channels = self.get_camera_data().get_raw_channels()
         # classifier = Classifier(channels)
@@ -183,7 +183,7 @@ class DataPoint:
 
         img = self.get_camera_data()
 
-        cloud_mask = img.mask_lighter_total(310) # Cloud
+        cloud_mask = img.mask_thresholds(50, 310) # Clouds (and camera cover
         # print(np.sum(cloud_mask))
 
         mask = np.logical_or(sea_mask, cloud_mask)
