@@ -10,30 +10,15 @@ from remove_overlapping_pictures import get_spherical_distance
 from misc.serialise_data_points import deserialise_from_prompt, deserialise_from_file
 
 
-def compare_old_and_new(data_points):
-    # timestamps = [point.get_timestamp().get_raw() for point in data_points]
-    latitudes = [point.get_coordinates()[0] for point in data_points]
-    longitudes = [point.get_coordinates()[1] for point in data_points]
-
-    data_points_full = deserialise_from_file(f"./intermediates/full_data.json")
-    data_points_full = [point for point in data_points_full]
-
-    # timestamps_full = [point.get_timestamp().get_raw() for point in data_points_full]
-    latitudes_full = [point.get_coordinates()[0] for point in data_points_full]
-    longitudes_full = [point.get_coordinates()[1] for point in data_points_full]
-
+def compare_locations(data_point_collections, labels, colours):
     # Show the picture of the Earth
     plt.imshow(plt.imread("data/other/world_map.png"), extent=[-180, 180, -90, 90])
+    for i, data_points in enumerate(data_point_collections):
 
-    plt.scatter(
-        longitudes_full, latitudes_full, c="blue", label="Data received from the ISS"
-    )
-    plt.scatter(
-        longitudes,
-        latitudes,
-        c="orange",
-        label="Pictures of land received from the ISS",
-    )
+        latitudes = [point.get_coordinates()[0] for point in data_points]
+        longitudes = [point.get_coordinates()[1] for point in data_points]
+
+        plt.scatter(longitudes, latitudes, c=colours[i], label=labels[i])
     plt.xlabel("Longitude")
     plt.ylabel("Latitude")
     plt.legend()
@@ -99,6 +84,9 @@ def mean_plot(values, labels, bins, x_id, y_id, label_on_right=False):
     y_regression = coef * x_regression + intercept
     plt.plot(x_regression, y_regression, c="green")
 
+    pmcc = np.corrcoef(x, y)[0, 1]
+    print(f"Label: {x_label}, r={pmcc}, n={x.size}, m={model.coef_}")
+
     # polynomial regression
     degree = 2
     # get the different degrees
@@ -116,9 +104,6 @@ def mean_plot(values, labels, bins, x_id, y_id, label_on_right=False):
     y_regression = np.sum(x_regression_transformed * coef, axis=1) + intercept
 
     plt.plot(x_regression, y_regression, c="orange")
-
-    pmcc = np.corrcoef(x, y)[0, 1]
-    print(f"Label: {x_label}, r={pmcc}, n={x.size}")
     if label_on_right:
         label_x = 0.7
     else:
@@ -218,52 +203,86 @@ def to_frequencies(values, bins):
 data_points = deserialise_from_prompt()
 
 
-# expected_ndvi_values = [point.get_expected_ndvi() for point in data_points]
-# population_densities = [point.get_population_density() for point in data_points]
-# latitudes = [point.get_latitude() for point in data_points]
-# co2_emissions = [point.get_co2_emissions() for point in data_points]
-# historical_land_use = [point.get_historical_land_use() for point in data_points]
-# gdp = [point.get_gdp() for point in data_points]
-# precipitation = [point.get_precipitation() for point in data_points]
-# temperature = [point.get_temperature() for point in data_points]
-# radiation = [point.get_radiation() for point in data_points]
+expected_ndvi_values = [point.get_expected_ndvi() for point in data_points]
+population_densities = [point.get_population_density() for point in data_points]
+latitudes = [point.get_latitude() for point in data_points]
+co2_emissions = [point.get_co2_emissions() for point in data_points]
+historical_land_use = [point.get_historical_land_use() for point in data_points]
+gdp = [point.get_gdp() for point in data_points]
+precipitation = [point.get_precipitation() for point in data_points]
+temperature = [point.get_temperature() for point in data_points]
+radiation = [point.get_radiation() for point in data_points]
+data = np.array(
+    [
+        expected_ndvi_values,
+        take_log(population_densities),
+        latitudes,
+        take_log(co2_emissions),
+        take_log(gdp),
+        take_log(precipitation),
+        temperature,
+        radiation,
+        # historical_land_use,
+    ],
+    dtype=float,
+)
 
 # data = np.array(
 #     [
-#         expected_ndvi_values,
-#         take_log(population_densities),
-#         latitudes,
-#         take_log(co2_emissions),
-#         take_log(gdp),
-#         take_log(precipitation),
-#         temperature,
-#         radiation,
+#         population_densities,
+#         co2_emissions,
+#         gdp,
+#         precipitation,
 #         # historical_land_use,
 #     ],
 #     dtype=float,
 # )
 
+labels = [
+    "Dataset NDVI value",  # 0
+    "ln(population density)",  # 1
+    "latitude",  # 2
+    "ln(CO2 emissions)",  # 3
+    "ln(GDP)",  # 4
+    "ln(Precipitation)",  # 5
+    "Temperature",  # 6
+    "Radiation",  # 7
+    # "Historical land use",  # 8
+]
+
 # labels = [
-#     "Dataset NDVI value",  # 0
-#     "ln(population density)",  # 1
-#     "latitude",  # 2
-#     "ln(CO2 emissions)",  # 3
-#     "ln(GDP)",  # 4
-#     "ln(Precipitation)",  # 5
-#     "Temperature",  # 6
-#     "Radiation",  # 7
+#     "population density",  # 1
+#     "CO2 emissions",  # 3
+#     "GDP",  # 4
+#     "Precipitation",  # 5
 #     # "Historical land use",  # 8
 # ]
 
-# # Histograms of each datapoint
-# for i in range(0, len(data)):
-#     plt.subplot(3, 3, i + 1)
-#     overall_hist(data, labels, i)
+# process parts of NDVI data
+data_left = data[:, data[0, ...] < 0.48]
+data_right = data[:, data[0, ...] >= 0.48]
+
+fig = plt.figure()
+# Histograms of each datapoint
+for i in range(0, len(data)):
+    plt.subplot(3, 3, i + 1)
+    overall_hist(data, labels, i)
+
+#     overall_hist(data_left, labels, i)
+#     overall_hist(data_right, labels, i)
+# fig.legend(
+#     ["Lower NDVI values", "Higher NDVI values"],
+#     loc="upper center",
+#     bbox_to_anchor=(0.66, 0.0, 0.33, 0.3),
+# )
 
 # # plots of means and standard deviations
 # fig = plt.figure()
+# # fig.suptitle("Effect of various variables on NDVI on plants with higher NDVI values")
+# fig.suptitle("Effect of various variables on NDVI of plants")
 # for i in range(1, len(data)):
 #     plt.subplot(3, 3, i)
+#     # mean_plot(data_right, labels, 20, i, 0, label_on_right=(labels[i] == "Radiation"))
 #     mean_plot(data, labels, 20, i, 0, label_on_right=(labels[i] == "Radiation"))
 
 # fig.legend(
@@ -289,7 +308,24 @@ data_points = deserialise_from_prompt()
 #     )
 
 # path of the ISS
-plt.figure()
-compare_old_and_new(data_points)
+# plt.figure()
+
+# data_points_full = deserialise_from_file(f"./intermediates/full_data.json")
+# data_points_full = [point for point in data_points_full]
+# compare_locations(
+#     [
+#         data_points_full,
+#         data_points,
+#     ],
+#     [
+#         "Data received from the ISS",
+#         "Pictures of land received from the ISS",
+#     ],
+#     ["blue", "orange"],
+# )
+
+# different parts of the dataset on the map
+# plt.figure()
+
 
 plt.show()
