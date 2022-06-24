@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import math
+import os
 import urllib
 from copy import deepcopy
 
@@ -9,11 +10,12 @@ import requests
 import urllib3
 
 from misc.dataset_reader import ASCReader
+from misc.land_mask_process import get_sea_mask
 from results.camera_data import CameraData
 from results.timestamp_data import TimeStampData
 
 # A helpful site for debugging: https://www.findlatitudeandlongitude.com/
-from settings import GGLMAPS_KEY
+from settings import GGLMAPS_KEY, OUT_DIR
 
 """Datasets"""
 expected_ndvi = ASCReader("data/datasets/ndvi.asc")
@@ -163,43 +165,45 @@ class DataPoint:
         # # view_img.display()
 
         # Get sea mask - create URL for API
-        long, lat = self.get_coordinates()
+        # long, lat = self.get_coordinates()
         width, height, _ = self.get_camera_data().image.shape
-        scale_factor = max(width, height) / 640 # Won't display larger than 640x640 - mask size x sf = image size
 
-        sea_mask_url = f"https://maps.googleapis.com/maps/api/staticmap?center={long}," \
-                        f"{lat}&zoom=7&format=png&size={int(height//scale_factor)}x{int(width//scale_factor)}&maptype=roadmap&style" \
-                        f"=feature:administrative|visibility:off&style=feature:landscape|color:0x000000&style=feature" \
-                        f":water|color:0xffffff&style=feature:road|visibility:off&style=feature:transit|visibility" \
-                        f":off&style=feature:poi|visibility:off&key={GGLMAPS_KEY}"
-
-        resp = requests.get(sea_mask_url, stream=True)
-
-        print(sea_mask_url)
-        sea_mask = np.asarray(bytearray(resp.content), dtype=np.uint8)
-        sea_mask = cv2.imdecode(sea_mask, cv2.IMREAD_UNCHANGED) # Is sea
         try:
-            sea_mask = cv2.resize(sea_mask, (height, width))
+            sea_mask = cv2.imread(os.path.join(OUT_DIR, "images", "mask", f"{self.get_id()}_mask.png"))
+            sea_mask, _, _ = cv2.split(sea_mask)  # 1 channel
+            sea_mask = (sea_mask == 0)  # Black is sea
         except:
-            raise ValueError("Correct image not returned because: "+resp.text)
+            # All land
+            sea_mask = np.full((width, height), False)
 
-        sea_mask = sea_mask == 255
-        sea_mask_cd = CameraData.from_processed_np_array(sea_mask.astype(np.uint8))
-        sea_mask_cd.display()
-        print(sea_mask.shape, to_mask.image.shape)
+        # sea_mask = get_sea_mask(long, lat, width, height)
 
-        # img = self.get_camera_data()
+        # sea_mask_cd = CameraData.from_processed_np_array(sea_mask.astype(np.uint8)*255)
+        # sea_mask_cd.display()
 
-        # cloud_mask = img.mask_lighter_total(310) # Cloud
+        img = self.get_camera_data()
+
+        cloud_mask = img.mask_lighter_total(310) # Cloud
         # print(np.sum(cloud_mask))
 
-        # mask = sea_mask
+        mask = np.logical_or(sea_mask, cloud_mask)
 
         # view_img = deepcopy(self.get_camera_data())
-        # view_img.image[sea_mask] = 0
+        # view_img.image[mask] = view_img.image[mask]//2
+        # view_img.display()
+        #
+        # view_img = deepcopy(to_mask)
+        # view_img.image[mask] = 0
+        # view_img.contrast()
         # view_img.display()
 
-        # return to_mask.image[mask]
+        to_mask.image[mask] = np.nan
+
+        # demo = deepcopy(to_mask)
+        # demo.contrast()
+        # demo.display()
+
+        return to_mask.image
 
     def get_ndvi(self):
         return self.get_camera_data().get_ndvi()

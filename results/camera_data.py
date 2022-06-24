@@ -150,6 +150,7 @@ class CameraData(Data):
         title = "Camera image preview"
         cv2.namedWindow(title)  # create window
         cv2.imshow(title, img)  # display image
+        cv2.imwrite("displayed.png", img) # save for debugging
 
     def close(self):
         cv2.destroyAllWindows()

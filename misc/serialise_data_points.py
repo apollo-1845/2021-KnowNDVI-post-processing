@@ -31,11 +31,11 @@ def deserialise_data_points(string):
         yield DataPoint.deserialise(point)
 
 
-def deserialise_from_prompt():
+def deserialise_from_prompt(default_name="full_data"):
     # An example name could be 'full_data'
-    file_name = input("Input file name (blank for 'full_data'):")
+    file_name = input(f"Input file name (blank for '{default_name}'):")
     if file_name == "":
-        file_name = "full_data"
+        file_name = default_name
     data_points = deserialise_from_file(f"./intermediates/{file_name}.json")
 
     data_points = np.array([point for point in data_points])

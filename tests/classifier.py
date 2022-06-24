@@ -18,12 +18,12 @@ import numpy as np
 
 def run_test():
     # Get mask
-    for i, datapoint in get_datapoints(670, 700, 10):
-        if datapoint.get_land_cover() != 0:  # Only on land
+    for i, datapoint in get_datapoints(600, 4000, 10): #list(get_datapoints(1800, 1900, 10)) +
+        if datapoint.get_land_cover() != 0 and np.mean(datapoint.get_camera_data().image) > 10:  # Only on light land
             print("Image", i)
             print(datapoint.get_coordinates())
             start = time.time()
             ndvi = datapoint.get_land_masked(datapoint.get_ndvi())
             end = time.time()
-            print("Mean NDVI", np.mean(ndvi))
+            print("Mean NDVI", np.nanmean(ndvi), "Expected", datapoint.get_expected_ndvi())
             print("Took", end - start, "s to generate land-masked list of NDVIs")
