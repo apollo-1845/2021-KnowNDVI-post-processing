@@ -17,8 +17,8 @@ if __name__ == "__main__":
         print(point.get_id())
         ndvis = point.get_land_masked(point.get_ndvi())
         print(ndvis.shape)
-        for y in range(0, ndvis.shape[0], 50): # Height
-            for x in range(0, ndvis.shape[0], 50):  # Width
+        for y in range(0, ndvis.shape[0], 200): # Height
+            for x in range(0, ndvis.shape[0], 200):  # Width
                 # print("i", i)
                 pxpoint = deepcopy(point)
                 pxpoint._avg_ndvi = np.mean(ndvis[y:y+50, x:x+50])

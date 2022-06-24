@@ -1,6 +1,7 @@
 # Results to read in
 **/images/vis/*
 **/images/nir/*
+**/knowndvi/**
 !**/*.md
 
 # data that can be generated
