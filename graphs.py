@@ -212,9 +212,19 @@ gdp = [point.get_gdp() for point in data_points]
 precipitation = [point.get_precipitation() for point in data_points]
 temperature = [point.get_temperature() for point in data_points]
 radiation = [point.get_radiation() for point in data_points]
+
+# remove the 0s
+experimental_ndvi_values = []
+for point in data_points:
+    ndvi = point.get_avg_ndvi()
+    if ndvi == 0:
+        ndvi = np.nan
+    experimental_ndvi_values.append(ndvi)
+
 data = np.array(
     [
-        expected_ndvi_values,
+        experimental_ndvi_values,
+        # expected_ndvi_values,
         take_log(population_densities),
         latitudes,
         take_log(co2_emissions),
@@ -239,7 +249,8 @@ data = np.array(
 # )
 
 labels = [
-    "Dataset NDVI value",  # 0
+    "NDVI values",  # 0
+    # "Dataset NDVI value",  # 0
     "ln(population density)",  # 1
     "latitude",  # 2
     "ln(CO2 emissions)",  # 3
@@ -248,6 +259,7 @@ labels = [
     "Temperature",  # 6
     "Radiation",  # 7
     # "Historical land use",  # 8
+    #     experimental_ndvi_values.append(ndvi)
 ]
 
 # labels = [
@@ -262,38 +274,39 @@ labels = [
 data_left = data[:, data[0, ...] < 0.48]
 data_right = data[:, data[0, ...] >= 0.48]
 
-fig = plt.figure()
-# Histograms of each datapoint
-for i in range(0, len(data)):
-    plt.subplot(3, 3, i + 1)
-    overall_hist(data, labels, i)
+# fig = plt.figure()
+# # Histograms of each datapoint
+# for i in range(0, len(data)):
+#     plt.subplot(3, 3, i + 1)
+#     overall_hist(data, labels, i)
 
-#     overall_hist(data_left, labels, i)
-#     overall_hist(data_right, labels, i)
-# fig.legend(
-#     ["Lower NDVI values", "Higher NDVI values"],
-#     loc="upper center",
-#     bbox_to_anchor=(0.66, 0.0, 0.33, 0.3),
-# )
+# #     overall_hist(data_left, labels, i)
+# #     overall_hist(data_right, labels, i)
+# # fig.legend(
+# #     ["Lower NDVI values", "Higher NDVI values"],
+# #     loc="upper center",
+# #     bbox_to_anchor=(0.66, 0.0, 0.33, 0.3),
+# # )
 
 # # plots of means and standard deviations
-# fig = plt.figure()
-# # fig.suptitle("Effect of various variables on NDVI on plants with higher NDVI values")
+fig = plt.figure()
+# fig.suptitle("Effect of various variables on NDVI on plants with higher NDVI values")
 # fig.suptitle("Effect of various variables on NDVI of plants")
-# for i in range(1, len(data)):
-#     plt.subplot(3, 3, i)
-#     # mean_plot(data_right, labels, 20, i, 0, label_on_right=(labels[i] == "Radiation"))
-#     mean_plot(data, labels, 20, i, 0, label_on_right=(labels[i] == "Radiation"))
+fig.suptitle("Experimental NDVI", c="blue")
+for i in range(1, len(data)):
+    plt.subplot(3, 3, i)
+    # mean_plot(data_right, labels, 20, i, 0, label_on_right=(labels[i] == "Radiation"))
+    mean_plot(data, labels, 20, i, 0, label_on_right=(labels[i] == "Radiation"))
 
-# fig.legend(
-#     [
-#         "Linear regression line",
-#         "Polynomial regression line",
-#         "Mean dependent variable",
-#     ],
-#     loc="upper center",
-#     bbox_to_anchor=(0, 0.0, 1, 0.3),
-# )
+fig.legend(
+    [
+        "Linear regression line",
+        "Polynomial regression line",
+        "Mean dependent variable",
+    ],
+    loc="upper center",
+    bbox_to_anchor=(0, 0.0, 1, 0.3),
+)
 
 # # pairwise histograms
 # plt.figure()
@@ -308,7 +321,7 @@ for i in range(0, len(data)):
 #     )
 
 # path of the ISS
-# plt.figure()
+plt.figure()
 
 # data_points_full = deserialise_from_file(f"./intermediates/full_data.json")
 # data_points_full = [point for point in data_points_full]
@@ -318,14 +331,11 @@ for i in range(0, len(data)):
 #         data_points,
 #     ],
 #     [
-#         "Data received from the ISS",
+#         "Data received from the ISS (excluding some night images)",
 #         "Pictures of land received from the ISS",
 #     ],
 #     ["blue", "orange"],
 # )
-
-# different parts of the dataset on the map
-# plt.figure()
 
 
 plt.show()

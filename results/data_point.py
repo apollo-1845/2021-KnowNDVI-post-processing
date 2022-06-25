@@ -15,7 +15,7 @@ from results.camera_data import CameraData
 from results.timestamp_data import TimeStampData
 
 # A helpful site for debugging: https://www.findlatitudeandlongitude.com/
-from settings import GGLMAPS_KEY, OUT_DIR
+from settings import OUT_DIR
 
 """Datasets"""
 expected_ndvi = ASCReader("data/datasets/ndvi.asc")
@@ -169,9 +169,11 @@ class DataPoint:
         width, height, _ = self.get_camera_data().image.shape
 
         try:
-            sea_mask = cv2.imread(os.path.join(OUT_DIR, "images", "mask", f"{self.get_id()}_mask.png"))
+            sea_mask = cv2.imread(
+                os.path.join(OUT_DIR, "images", "mask", f"{self.get_id()}_mask.png")
+            )
             sea_mask, _, _ = cv2.split(sea_mask)  # 1 channel
-            sea_mask = (sea_mask == 0)  # Black is sea
+            sea_mask = sea_mask == 0  # Black is sea
         except:
             # All land
             sea_mask = np.full((width, height), False)
@@ -183,7 +185,7 @@ class DataPoint:
 
         img = self.get_camera_data()
 
-        cloud_mask = img.mask_lighter_total(310) # Cloud
+        cloud_mask = img.mask_lighter_total(310)  # Cloud
         # print(np.sum(cloud_mask))
 
         mask = np.logical_or(sea_mask, cloud_mask)
@@ -229,7 +231,7 @@ class DataPoint:
             return {
                 "timestamp": self._timestamp.serialise().hex(),
                 "camera_data_raw": self._camera_data_raw.hex(),
-                "ndvi": self._avg_ndvi
+                "ndvi": self._avg_ndvi,
             }
 
     def deserialise(serialised):
@@ -238,11 +240,11 @@ class DataPoint:
                 bytes.fromhex(serialised["timestamp"])
             )
             camera_data_raw = serialised["camera_data_raw"]
-            avg_ndvi = serialised["ndvi"] if "ndvi" in serialised else None # Try to get but otherwise return None
+            avg_ndvi = (
+                serialised["ndvi"] if "ndvi" in serialised else None
+            )  # Try to get but otherwise return None
             return DataPoint.from_timestamp(
-                timestamp,
-                bytes.fromhex(camera_data_raw),
-                avg_ndvi
+                timestamp, bytes.fromhex(camera_data_raw), avg_ndvi
             )
         # if no timestamp, don't panic!
         except:
