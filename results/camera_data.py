@@ -190,15 +190,15 @@ class CameraData(Data):
 
         return self.ndvi
 
-    def mask_lighter_total(self, threshold: int):
-        """Return the mask of total NIR + VIS larger than threshold (up to 510)"""
+    def mask_thresholds(self, min_threshold: int, max_threshold: int):
+        """Return the mask of total NIR + VIS out of thresholds"""
         # Masking - total is the total of red and blue channels
         nir, vis = cv2.split(self.image)
         nir = nir.astype("float")  # NaN is a float
         vis = vis.astype("float")
         total = nir + vis
 
-        mask = total > threshold
+        mask = np.logical_or(total > max_threshold, total < min_threshold)
         return mask
 
     def mask_darker_total(self, threshold: int):

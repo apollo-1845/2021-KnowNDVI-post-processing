@@ -17,6 +17,7 @@ def zoom_sea_mask(sea_mask, zoom_factor):
 
 def get_sea_mask(long:float, lat:float, width:int, height:int):
     """Get a sea mask from Google Maps"""
+    # This is from when we used the Google Maps API, but we are now using manual land masking as this is more accurate.
     api_scale_factor = max(width, height) / 640  # Won't display larger than 640x640 - mask size x sf = image size
 
     sea_mask_url = f"https://maps.googleapis.com/maps/api/staticmap?center={long}," \
